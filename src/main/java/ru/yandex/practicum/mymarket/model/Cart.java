@@ -1,6 +1,7 @@
 package ru.yandex.practicum.mymarket.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 import java.util.Objects;
@@ -14,6 +15,11 @@ public class Cart {
     @Column(unique = true, nullable = false)
     private String sessionId;
 
+    protected Cart() {}
+
+    public Cart(@NotNull final String sessionId) {
+        this.sessionId = sessionId;
+    }
 
     public Long getId() {
         return id;

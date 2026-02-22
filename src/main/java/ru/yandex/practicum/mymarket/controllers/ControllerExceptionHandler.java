@@ -10,6 +10,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.ErrorResponse;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -34,9 +35,9 @@ public class ControllerExceptionHandler {
         logger.error("Unexpected error: ", e);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler({IllegalArgumentException.class, MissingServletRequestParameterException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public void handleIllegalArgumentException(@NotNull final IllegalArgumentException e) {
+    public void handleIllegalArgumentException(@NotNull final Exception e) {
         logger.error("Unexpected error: ", e);
     }
 }
