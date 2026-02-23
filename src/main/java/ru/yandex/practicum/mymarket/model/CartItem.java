@@ -22,6 +22,7 @@ public class CartItem {
 
     /**
      * Добавление товара в корзину. Количество товаров = 1.
+     *
      * @param cart корзина, привязанная к id сессии.
      * @param item товар.
      */
@@ -32,11 +33,12 @@ public class CartItem {
         this.count = 1;
     }
 
-    public void incrementCount(){
-        this.count ++;
+    public void incrementCount() {
+        this.count++;
     }
-    public void decrementCount(){
-        this.count --;
+
+    public void decrementCount() {
+        this.count--;
     }
 
     public void setCount(int count) {

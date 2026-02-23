@@ -15,7 +15,8 @@ public class Cart {
     @Column(unique = true, nullable = false)
     private String sessionId;
 
-    protected Cart() {}
+    protected Cart() {
+    }
 
     public Cart(@NotNull final String sessionId) {
         this.sessionId = sessionId;

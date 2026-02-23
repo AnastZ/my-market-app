@@ -22,7 +22,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final DTOConvertor<Order, OrderDTO> orderDTOConvertor;
     private final CartItemService cartItemService;
-    private final DTOConvertor<CartItem, OrderItem>  cartItemDTOConvertor;
+    private final DTOConvertor<CartItem, OrderItem> cartItemDTOConvertor;
 
     public OrderService(@NotNull final OrderRepository orderRepository,
                         @NotNull final DTOConvertor<Order, OrderDTO> orderDTOConvertor,
@@ -43,7 +43,7 @@ public class OrderService {
     @Transactional(readOnly = true)
     public OrderDTO findById(@NotNull final Long id) throws NoResultException {
         final Optional<Order> order = orderRepository.findById(id);
-        if(order.isEmpty()){
+        if (order.isEmpty()) {
             throw new NoResultException("Order with id " + id + " does not exist.");
         }
         return orderDTOConvertor.toDTO(order.get());

@@ -15,18 +15,16 @@ import java.util.Objects;
 @Service
 public class ImageService {
 
-    private final ItemService itemService;
     private final ImageStorageService imageStorageService;
 
-    public ImageService(@NotNull final ItemService itemService,
-                        @NotNull final ImageStorageService imageStorageService) {
-        this.itemService = itemService;
+    public ImageService(@NotNull final ImageStorageService imageStorageService) {
         this.imageStorageService = imageStorageService;
     }
+
     /**
-     * Получить изображение поста.
+     * Получить изображение.
      *
-     * @param id уникальный номер поста.
+     * @param fileName название изображения.
      * @return массив байт обёрнутый в ответ.
      * @throws Exception
      */
@@ -41,6 +39,5 @@ public class ImageService {
                 .contentType(MediaType.parseMediaType(type.toString()))
                 .body(body);
     }
-
 
 }

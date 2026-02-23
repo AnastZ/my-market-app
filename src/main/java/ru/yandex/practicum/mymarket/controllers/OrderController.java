@@ -17,7 +17,7 @@ import java.util.List;
 @RequestMapping("/orders")
 public class OrderController {
 
-    private final OrderService  orderService;
+    private final OrderService orderService;
 
     public OrderController(@NotNull final OrderService orderService) {
         this.orderService = orderService;
@@ -33,7 +33,7 @@ public class OrderController {
     @GetMapping("/{id}")
     public String newOrder(@NotNull final Model model,
                            @PathVariable("id") final Long orderId,
-                           @RequestParam(name = "newOrder", required = false, defaultValue = "false") final boolean newOrder)  throws MissingServletRequestParameterException {
+                           @RequestParam(name = "newOrder", required = false, defaultValue = "false") final boolean newOrder) throws MissingServletRequestParameterException {
         System.err.println("redirect true");
         final OrderDTO order = orderService.findById(orderId);
         model.addAttribute("order", order);

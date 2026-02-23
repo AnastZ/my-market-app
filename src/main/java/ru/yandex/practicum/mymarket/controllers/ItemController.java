@@ -61,13 +61,13 @@ public class ItemController {
 
     @PostMapping
     public RedirectView changeItemInCart(@NotNull final HttpSession session,
-                                      @NotNull final RedirectAttributes redirectAttributes,
-                                      @RequestParam("id") final Long id,
-                                      @RequestParam(value = "search", required = false, defaultValue = "") final String search,
-                                      @RequestParam(value = "sort", required = false, defaultValue = "NO") @NotNull final SortMethod sort,
-                                      @RequestParam(value = "pageNumber", required = false, defaultValue = "1") final int pageNumber,
-                                      @RequestParam(value = "pageSize", required = false, defaultValue = "5") final int pageSize,
-                                      @RequestParam(value = "action") final CartItemAction action) throws MissingServletRequestParameterException {
+                                         @NotNull final RedirectAttributes redirectAttributes,
+                                         @RequestParam("id") final Long id,
+                                         @RequestParam(value = "search", required = false, defaultValue = "") final String search,
+                                         @RequestParam(value = "sort", required = false, defaultValue = "NO") @NotNull final SortMethod sort,
+                                         @RequestParam(value = "pageNumber", required = false, defaultValue = "1") final int pageNumber,
+                                         @RequestParam(value = "pageSize", required = false, defaultValue = "5") final int pageSize,
+                                         @RequestParam(value = "action") final CartItemAction action) throws MissingServletRequestParameterException {
         switch (action) {
             case PLUS -> itemService.incrementItem(id, session.getId());
             case MINUS -> itemService.decrementItem(id, session.getId());
@@ -83,7 +83,7 @@ public class ItemController {
     @GetMapping("/{id}")
     public String getItem(@PathVariable("id") final Long itemId,
                           @NotNull final Model model,
-                          @NotNull final HttpSession session){
+                          @NotNull final HttpSession session) {
 
         model.addAttribute("item", itemService.findItem(itemId, session.getId()));
         return "item";
@@ -91,11 +91,11 @@ public class ItemController {
 
     @PostMapping("/{id}")
     public String changeItemInCart(@PathVariable("id") final Long itemId,
-                          @RequestParam(value = "action") final CartItemAction action,
-                          @NotNull final Model model,
-                          @NotNull final HttpSession session){
+                                   @RequestParam(value = "action") final CartItemAction action,
+                                   @NotNull final Model model,
+                                   @NotNull final HttpSession session) {
 
-        if(Objects.nonNull(action)){
+        if (Objects.nonNull(action)) {
             switch (action) {
                 case PLUS -> itemService.incrementItem(itemId, session.getId());
                 case MINUS -> itemService.decrementItem(itemId, session.getId());

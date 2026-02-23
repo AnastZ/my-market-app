@@ -22,19 +22,22 @@ public class CartService {
     public CartService(@NotNull final CartRepository cartRepository) {
         this.cartRepository = cartRepository;
     }
+
     public void setItemService(@NotNull final ItemService itemService) {
         this.itemService = itemService;
     }
+
     /**
      * Найти существующую корзину в БД по уникальному полю - id сессии
      * или создать новый объект корзины с переданным id сессии.
+     *
      * @param sessionId уникальный номер сессии.
      * @return корзина, существующая в БД.
      */
     @Transactional
     public Cart getOrCreateBySessionId(@NotNull final String sessionId) {
         final Optional<Cart> existCart = cartRepository.findBySessionId(sessionId);
-        if(existCart.isPresent()) {
+        if (existCart.isPresent()) {
             return existCart.get();
         }
         final Cart cart = new Cart(sessionId);
@@ -52,11 +55,12 @@ public class CartService {
     }
 
     public void incrementItem(@NotNull final Long itemId,
-                              @NotNull @NotBlank final String sessionId){
+                              @NotNull @NotBlank final String sessionId) {
         itemService.incrementItem(itemId, sessionId);
     }
+
     public void decrementItem(@NotNull final Long itemId,
-                              @NotNull @NotBlank final String sessionId){
+                              @NotNull @NotBlank final String sessionId) {
         itemService.decrementItem(itemId, sessionId);
     }
 }

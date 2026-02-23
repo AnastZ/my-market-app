@@ -8,7 +8,7 @@ import java.util.Objects;
 /**
  * Класс для загрузки данных о количестве товара в корзине.
  */
-public class ItemDAO{
+public class ItemDAO {
     private final Item item;
     private final int count;
 

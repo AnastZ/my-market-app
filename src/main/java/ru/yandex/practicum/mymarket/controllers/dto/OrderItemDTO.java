@@ -15,7 +15,6 @@ public record OrderItemDTO(@NotNull Long id,
         return title;
     }
 
-
     public Long getPrice() {
         return price;
     }

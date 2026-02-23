@@ -17,7 +17,6 @@ public class ImageController {
         this.imageService = imageService;
     }
 
-
     /**
      * Получить байты изображения для товара.
      *

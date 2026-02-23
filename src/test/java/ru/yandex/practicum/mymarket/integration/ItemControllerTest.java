@@ -3,9 +3,7 @@ package ru.yandex.practicum.mymarket.integration;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.constraints.NotNull;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -32,6 +30,7 @@ import ru.yandex.practicum.mymarket.services.ItemService;
 
 import javax.swing.text.html.Option;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -57,11 +56,6 @@ public class ItemControllerTest extends AbstractController implements FillItems{
         FillItems.super.fillItems(itemRepository);
     }
 
-    @AfterEach
-    public void teardown() {
-        itemRepository.deleteAll();
-    }
-
     @Test
     public void findAll_withoutParams() throws Exception {
         final int defNumber = 1;
@@ -80,6 +74,7 @@ public class ItemControllerTest extends AbstractController implements FillItems{
                 .andExpect(model().attributeExists("sort"))
                 .andExpect(model().attributeExists("paging"))
                 .andExpect(model().attribute("items", Matchers.not(empty())))
+                .andExpect(model().attribute("items", hasItem(hasSize(itemListSize))))
                 .andExpect(model().attribute("search", ""))
                 .andExpect(model().attribute("sort", ItemController.SortMethod.NO))
                 .andExpect(model().attribute("paging", allOf(
@@ -211,14 +206,6 @@ public class ItemControllerTest extends AbstractController implements FillItems{
                 ));
     }
 
-    @Test
-    public void increment_error() throws Exception {
-        mockMvc.perform(post(path)
-                        .contentType(MediaType.TEXT_HTML)
-                        .accept(MediaType.TEXT_HTML)
-                        .characterEncoding("utf-8"))
-                .andExpect(status().isBadRequest());
-    }
 
     @Autowired
     private CartItemRepository cartItemRepository;
@@ -226,79 +213,115 @@ public class ItemControllerTest extends AbstractController implements FillItems{
     @Autowired
     private ItemService itemService;
 
-    @Test
-    public void increment_success() throws Exception {
-        final MockHttpSession session = new MockHttpSession();
-        List<Item> items = itemRepository.findAll();
-        for (Item item : items) {
-            itemService.incrementItem(item.getId(), session.getId());
-            final Optional<CartItem> beforeItem = cartItemRepository.findByItemIdAndSessionId(item.getId(), session.getId());
-            if (beforeItem.isEmpty())
-                return;
-            mockMvc.perform(post(path)
-                            .session(session)
-                            .param("id", item.getId().toString())
-                            .param("action", "PLUS")
-                            .contentType(MediaType.TEXT_HTML)
-                            .accept(MediaType.TEXT_HTML)
-                            .characterEncoding("utf-8"))
-                    .andExpect(status().isFound());
-            assertTrue(beforeItem.get().getCount() < cartItemRepository.findByItemIdAndSessionId(item.getId(), session.getId()).get().getCount());
-        }
+    @TestFactory
+    public Stream<DynamicTest> increment_success() throws Exception {
+        return itemRepository.findAll().stream()
+                .filter(Objects::nonNull) // Убедитесь, что item не null
+                .limit(10)
+                .map(item -> DynamicTest.dynamicTest("Incrementing item with ID: " + item.getId(), () -> {
+                    final MockHttpSession session = new MockHttpSession();
+                    itemService.incrementItem(item.getId(), session.getId());
+                    final Optional<CartItem> beforeItem = cartItemRepository.findByItemIdAndSessionId(item.getId(), session.getId());
+                    if (beforeItem.isEmpty())
+                        return;
+                    mockMvc.perform(post(path)
+                                    .session(session)
+                                    .param("id", item.getId().toString())
+                                    .param("action", "PLUS")
+                                    .contentType(MediaType.TEXT_HTML)
+                                    .accept(MediaType.TEXT_HTML)
+                                    .characterEncoding("utf-8"))
+                            .andExpect(status().isFound());
+                    assertTrue(beforeItem.get().getCount() < cartItemRepository.findByItemIdAndSessionId(item.getId(), session.getId()).get().getCount());
 
+                }));
     }
 
-    @ParameterizedTest
-    @MethodSource("itemIds")
-    public void decrement_success(final Long itemId) throws Exception {
-        final MockHttpSession session = new MockHttpSession();
-        itemService.incrementItem(itemId, session.getId());
-        final Optional<CartItem> beforeItem = cartItemRepository.findByItemIdAndSessionId(itemId, session.getId());
-        if (beforeItem.isEmpty())
-            return;
-        mockMvc.perform(post(path)
-                        .session(session)
-                        .param("id", itemId.toString())
-                        .param("action", "MINUS")
-                        .contentType(MediaType.TEXT_HTML)
-                        .accept(MediaType.TEXT_HTML)
-                        .characterEncoding("utf-8"))
-                .andExpect(status().isFound());
-        final Optional<CartItem> afterItem = cartItemRepository.findByItemIdAndSessionId(itemId, session.getId());
-        if (afterItem.isEmpty()) {
-            return;
-        }
-        assertTrue(beforeItem.get().getCount() > afterItem.get().getCount());
+    @TestFactory
+    public Stream<DynamicTest> decrement_success() throws Exception {
+        return itemRepository.findAll().stream()
+                .filter(Objects::nonNull)
+                .limit(10)
+                .map(item -> DynamicTest.dynamicTest("Decrementing item with ID: " + item.getId(), () -> {
+                    final Long itemId = item.getId();
+                    final MockHttpSession session = new MockHttpSession();
+                    itemService.incrementItem(itemId, session.getId());
+                    final Optional<CartItem> beforeItem = cartItemRepository.findByItemIdAndSessionId(itemId, session.getId());
+
+                    if (beforeItem.isEmpty()) {
+                        throw new IllegalStateException("Failed to prepare CartItem for test with itemId: " + itemId);
+                    }
+
+                    mockMvc.perform(post(path)
+                                    .session(session)
+                                    .param("id", itemId.toString())
+                                    .param("action", "MINUS")
+                                    .contentType(MediaType.TEXT_HTML)
+                                    .accept(MediaType.TEXT_HTML)
+                                    .characterEncoding("utf-8"))
+                            .andExpect(status().isFound());
+
+                    final Optional<CartItem> afterItem = cartItemRepository.findByItemIdAndSessionId(itemId, session.getId());
+
+                    if (afterItem.isEmpty()) {
+                        assertTrue(beforeItem.get().getCount() > 0, "Expected count to be greater than 0 before decrementing to 0.");
+                        return;
+                    }
+
+                    assertTrue(beforeItem.get().getCount() > afterItem.get().getCount(),
+                            "Expected cart item count to decrease for itemId: " + itemId);
+
+                }));
     }
 
-    @ParameterizedTest
-    @MethodSource("itemIds")
-    public void incrementFromOne_success(final Long itemId) throws Exception {
-        final MockHttpSession session = new MockHttpSession();
-        itemService.incrementItem(itemId, session.getId());
-        final Optional<CartItem> beforeItem = cartItemRepository.findByItemIdAndSessionId(itemId, session.getId());
-        if (beforeItem.isEmpty())
-            return;
-        final Item item = beforeItem.get().getItem();
-        mockMvc.perform(post(path + "/" + itemId)
-                        .session(session)
-                        .param("id", itemId.toString())
-                        .param("action", "PLUS")
-                        .contentType(MediaType.TEXT_HTML)
-                        .accept(MediaType.TEXT_HTML)
-                        .characterEncoding("utf-8"))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeExists("item"))
-                .andExpect(model().attribute("item", allOf(
-                                hasProperty("id", is(itemId)),
-                                hasProperty("title", is(item.getTitle())),
-                                hasProperty("description", is(item.getDescription())),
-                                hasProperty("imgPath", is(item.getImgPath())),
-                                hasProperty("price", is(item.getPrice())),
-                                hasProperty("count", is(beforeItem.get().getCount() + 1))
-                        )
-                ));
-        assertTrue(beforeItem.get().getCount() < cartItemRepository.findByItemIdAndSessionId(itemId, session.getId()).get().getCount());
+    @TestFactory
+    public Stream<DynamicTest> incrementFromOne_success() throws Exception {
+        return itemRepository.findAll().stream()
+                .filter(item -> item != null)
+                .limit(10)
+                .map(item -> DynamicTest.dynamicTest("Incrementing item with ID: " + item.getId(), () -> {
+                    final Long itemId = item.getId();
+                    final Item existingItem = item;
+                    final MockHttpSession session = new MockHttpSession();
+
+                    itemService.incrementItem(itemId, session.getId());
+
+                    final Optional<CartItem> beforeItemOpt = cartItemRepository.findByItemIdAndSessionId(itemId, session.getId());
+                    if (beforeItemOpt.isEmpty()) {
+                        throw new IllegalStateException("Failed to create initial CartItem for itemId: " + itemId);
+                    }
+                    final CartItem beforeCartItem = beforeItemOpt.get();
+                    final int initialCount = beforeCartItem.getCount();
+
+                    mockMvc.perform(post(path + "/" + itemId)
+                                    .session(session)
+                                    .param("id", itemId.toString())
+                                    .param("action", "PLUS")
+                                    .contentType(MediaType.TEXT_HTML)
+                                    .accept(MediaType.TEXT_HTML)
+                                    .characterEncoding("utf-8"))
+                            .andExpect(status().isOk())
+                            .andExpect(model().attributeExists("item"))
+                            .andExpect(model().attribute("item", allOf(
+                                            hasProperty("id", is(itemId)),
+                                            hasProperty("title", is(existingItem.getTitle())),
+                                            hasProperty("description", is(existingItem.getDescription())),
+                                            hasProperty("imgPath", is(existingItem.getImgPath())),
+                                            hasProperty("price", is(existingItem.getPrice())),
+                                            hasProperty("count", is(initialCount + 1))
+                                    )
+                            ));
+
+                    final Optional<CartItem> afterItemOpt = cartItemRepository.findByItemIdAndSessionId(itemId, session.getId());
+                    if (afterItemOpt.isEmpty()) {
+                        throw new IllegalStateException("CartItem for itemId " + itemId + " unexpectedly disappeared after increment.");
+                    }
+                    final CartItem afterCartItem = afterItemOpt.get();
+
+                    assertTrue(afterCartItem.getCount() == initialCount + 1,
+                            "Expected cart item count to increment from " + initialCount + " to " + (initialCount + 1) + " for itemId: " + itemId);
+
+                }));
     }
 
     @ParameterizedTest

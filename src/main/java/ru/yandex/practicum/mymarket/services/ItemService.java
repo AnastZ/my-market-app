@@ -51,10 +51,12 @@ public class ItemService {
         this.listSize = listSize;
         this.itemDTOConvertor = itemDTOConvertor;
     }
+
     @PostConstruct
     public void init() {
         cartService.setItemService(this);
     }
+
     /**
      * Разделить список объектов на множество списков с одинаковой длиной,
      * если не хватает объектов для заполнения последнего списка,
@@ -64,8 +66,8 @@ public class ItemService {
      * @param nestedSize размер вложенного списка.
      * @return список из списков.
      */
-    private @NotNull List<List<ItemDTO>> convertToNestedLists(@NotNull @NotEmpty final List<ItemDTO> items,
-                                                              @Min(1) final int nestedSize) {
+    public @NotNull List<List<ItemDTO>> convertToNestedLists(@NotNull @NotEmpty final List<ItemDTO> items,
+                                                             @Min(1) final int nestedSize) {
         final List<ItemDTO> modifyItems = new ArrayList<>(items);
         final int shortage = nestedSize - (items.size() % nestedSize);
         for (int i = 0; i < shortage; i++) {
@@ -181,7 +183,7 @@ public class ItemService {
      * Найти объект в БД по id.
      * Id сессии нужен, чтобы создать объект ItemDAO, который хранит количество объекта в корзине для переданной сессии.
      *
-     * @param itemId уникальный номер товара.
+     * @param itemId    уникальный номер товара.
      * @param sessionId уникальный номер сессии.
      * @return товар.
      * @throws NoResultException если товар не найден в БД.
@@ -198,6 +200,7 @@ public class ItemService {
 
     /**
      * Получить все объекты в корзине.
+     *
      * @param sessionId уникальный номер сессии.
      * @return объекты в корзине.
      */

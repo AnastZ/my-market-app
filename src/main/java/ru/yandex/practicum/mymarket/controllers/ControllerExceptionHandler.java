@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
+
 import jakarta.persistence.NonUniqueResultException;
 
 @RestControllerAdvice
@@ -29,6 +30,7 @@ public class ControllerExceptionHandler {
     public void handleAllErrors(@NotNull final Exception e) {
         logger.error("Unexpected error: ", e);
     }
+
     @ExceptionHandler({NoResultException.class, NoSuchFileException.class, NonUniqueResultException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public void handleNoResultException(@NotNull final Exception e) {
