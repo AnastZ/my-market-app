@@ -1,26 +1,20 @@
 package ru.yandex.practicum.mymarket.integration;
 
 import jakarta.servlet.http.HttpSession;
-import jakarta.validation.constraints.NotNull;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.ui.Model;
 import ru.yandex.practicum.mymarket.controllers.ItemController;
 import ru.yandex.practicum.mymarket.controllers.dto.ItemDTO;
-import ru.yandex.practicum.mymarket.controllers.dto.ItemsDTO;
 import ru.yandex.practicum.mymarket.model.CartItem;
 import ru.yandex.practicum.mymarket.model.Item;
 import ru.yandex.practicum.mymarket.repositories.CartItemRepository;
@@ -28,7 +22,6 @@ import ru.yandex.practicum.mymarket.repositories.ItemRepository;
 import ru.yandex.practicum.mymarket.repositories.dao.ItemDAO;
 import ru.yandex.practicum.mymarket.services.ItemService;
 
-import javax.swing.text.html.Option;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -61,7 +54,7 @@ public class ItemControllerTest extends AbstractController implements FillItems{
         final int defNumber = 1;
         final int defSize = 5;
         final MockHttpSession session = new MockHttpSession();
-        final int countPages = itemRepository.findAll("", session.getId(), PageRequest.of(defNumber, defSize)).getTotalPages();
+        final int countPages = itemRepository.findAllInCart("", session.getId(), PageRequest.of(defNumber, defSize)).getTotalPages();
         mockMvc.perform(get(path)
                         .session(session)
                         .contentType(MediaType.TEXT_HTML)
@@ -90,7 +83,7 @@ public class ItemControllerTest extends AbstractController implements FillItems{
     @CsvSource(value = {"1, 2", "3, 4"})
     public void findAll_withoutSearchAndSort(final int pageNumber, final int pageSize) throws Exception {
         final MockHttpSession session = new MockHttpSession();
-        final int countPages = itemRepository.findAll("", session.getId(), PageRequest.of(pageNumber, pageSize)).getTotalPages();
+        final int countPages = itemRepository.findAllInCart("", session.getId(), PageRequest.of(pageNumber, pageSize)).getTotalPages();
         mockMvc.perform(get(path)
                         .session(session)
                         .param("pageNumber", String.valueOf(pageNumber))
@@ -122,7 +115,7 @@ public class ItemControllerTest extends AbstractController implements FillItems{
                                  final int pageSize,
                                  final ItemController.SortMethod method) throws Exception {
         final MockHttpSession session = new MockHttpSession();
-        final Page<ItemDAO> itemsFromDB = itemRepository.findAll("", session.getId(), PageRequest.of(pageNumber, pageSize));
+        final Page<ItemDAO> itemsFromDB = itemRepository.findAllInCart("", session.getId(), PageRequest.of(pageNumber, pageSize));
         final int countPages = itemsFromDB.getTotalPages();
 
         final Map<String, Object> model = mockMvc.perform(get(path)
@@ -179,7 +172,7 @@ public class ItemControllerTest extends AbstractController implements FillItems{
     @CsvSource(value = {"1, 2, tit", "3, 4, ''"})
     public void findAll_withSearch(final int pageNumber, final int pageSize, final String search) throws Exception {
         final MockHttpSession session = new MockHttpSession();
-        final int countPages = itemRepository.findAll("", session.getId(), PageRequest.of(pageNumber, pageSize)).getTotalPages();
+        final int countPages = itemRepository.findAllInCart("", session.getId(), PageRequest.of(pageNumber, pageSize)).getTotalPages();
         mockMvc.perform(get(path)
                         .session(session)
                         .param("pageNumber", String.valueOf(pageNumber))

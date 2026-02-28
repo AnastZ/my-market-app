@@ -1,14 +1,15 @@
 package ru.yandex.practicum.mymarket.controllers;
 
-import jakarta.servlet.http.HttpSession;
+
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.servlet.view.RedirectView;
+import org.springframework.web.reactive.result.view.Rendering;
+import org.springframework.web.server.WebSession;
+import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mymarket.controllers.dto.OrderDTO;
 import ru.yandex.practicum.mymarket.model.CartItem;
 import ru.yandex.practicum.mymarket.services.OrderService;
@@ -23,14 +24,19 @@ public class BuyController {
         this.orderService = orderService;
     }
 
+    /**
+     * Оформление (создание) заказа и перенаправление на другую страницу.
+     * @param session сессия.
+     * @return источник представления.
+     */
     @PostMapping
-    public RedirectView buy(@NotNull final RedirectAttributes attributes,
-                            @NotNull final HttpSession session) {
-        final OrderDTO order = orderService.save(session.getId());
-        final RedirectView view = new RedirectView("orders/{id}");
-        attributes.addAttribute("id", order.id());
-        attributes.addAttribute("newOrder", true);
-        return view;
+    public Mono<Rendering> buy(@NotNull final WebSession session) {
+
+        return orderService.save(session.getId())
+                .map(order -> Rendering.redirectTo("orders/{id}")
+                        .modelAttribute("id", order.id())
+                        .modelAttribute("newOrder", true)
+                        .build());
     }
 
 }

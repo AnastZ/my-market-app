@@ -1,19 +1,17 @@
 spring:
   application:
     name: my-market
-
-  datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/market}
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:admin}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: create
-    show-sql: true
-    database-platform: org.hibernate.dialect.MySQLDialect
+    r2dbc:
+      url: ${DB_URL:r2dbc:h2:mem:///market};DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+      username: ${DB_USER:sa}
+      password: ${DB_PASSWORD:sa}
+    sql:
+      init:
+        mode: always
+    codec:
+      max-in-memory-size: 20MB
 item:
   image:
     path: classpath:images/
   list-size: 3
+

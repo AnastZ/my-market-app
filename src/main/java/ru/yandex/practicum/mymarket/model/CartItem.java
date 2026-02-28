@@ -1,22 +1,22 @@
 package ru.yandex.practicum.mymarket.model;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.ReadOnlyProperty;
+import org.springframework.data.annotation.Version;
 
 import java.util.Objects;
 
-@Entity
 public class CartItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @ReadOnlyProperty
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
     private Cart cart;
-    @ManyToOne(fetch = FetchType.EAGER)
     private Item item;
     private int count;
-
+    @Version
+    private Long version;
     protected CartItem() {
     }
 

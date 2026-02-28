@@ -1,37 +1,37 @@
 package ru.yandex.practicum.mymarket.model;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.ReadOnlyProperty;
+import org.springframework.data.annotation.Version;
 
 import java.util.Objects;
 
-@Entity
+
 public class OrderItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @ReadOnlyProperty
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
     private Long price;
 
     private int count;
+    @Version
+    private Long version;
 
     protected OrderItem() {
     }
 
-    public OrderItem(@NotNull final Item item,
-                     @NotNull final Long price,
-                     int count) {
-        this.item = item;
-        this.price = price;
-        this.count = count;
+    public OrderItem(@NotNull final Order order,
+                     @NotNull final CartItem item) {
+        this.order = order;
+        this.item = item.getItem();
+        this.price = item.getItem().getPrice();
+        this.count = item.getCount();
     }
 
     public Long getId() {

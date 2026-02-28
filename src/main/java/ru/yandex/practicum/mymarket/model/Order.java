@@ -1,31 +1,38 @@
 package ru.yandex.practicum.mymarket.model;
 
-import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.ReadOnlyProperty;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@Entity
+
 @Table(name = "order_table")
 public class Order {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @ReadOnlyProperty
     private Long id;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<OrderItem> orderItems = new ArrayList<>();
-
+    @Transient
+    private List<OrderItem> orderItems;
+    @Version
+    private Long version;
     public Order() {
+        orderItems = new ArrayList<>();
     }
 
-    public void addOrderItem(OrderItem orderItem) {
+    public void addOrderItem(@NotNull final OrderItem orderItem) {
         orderItems.add(orderItem);
         orderItem.setOrder(this);
     }
 
-    public void removeOrderItem(OrderItem orderItem) {
+    public void removeOrderItem(@NotNull final OrderItem orderItem) {
         orderItems.remove(orderItem);
         orderItem.setOrder(null);
     }
