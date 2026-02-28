@@ -41,6 +41,7 @@ public class ThymeleafConfiguration implements WebMvcConfigurer, ApplicationCont
         registry.addResourceHandler("/css/**").addResourceLocations("classpath:/static/css/");
         registry.addResourceHandler("/js/**").addResourceLocations("classpath:/static/js/");
     }
+
     @Bean
     public ResourceBundleMessageSource messageSource() {
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
@@ -49,9 +50,10 @@ public class ThymeleafConfiguration implements WebMvcConfigurer, ApplicationCont
     }
 
     @Bean
-    public SpringResourceTemplateResolver templateResolver(){
+    public SpringResourceTemplateResolver templateResolver() {
         SpringResourceTemplateResolver templateResolver = new SpringResourceTemplateResolver();
-        templateResolver.setApplicationContext(this.applicationContext);;
+        templateResolver.setApplicationContext(this.applicationContext);
+        ;
         templateResolver.setTemplateMode(TemplateMode.HTML);
 
         templateResolver.setPrefix("classpath:/templates/");
@@ -63,7 +65,7 @@ public class ThymeleafConfiguration implements WebMvcConfigurer, ApplicationCont
     }
 
     @Bean
-    public SpringTemplateEngine templateEngine(){
+    public SpringTemplateEngine templateEngine() {
         SpringTemplateEngine templateEngine = new SpringTemplateEngine();
         templateEngine.setTemplateResolver(templateResolver());
         templateEngine.setEnableSpringELCompiler(true);
@@ -71,7 +73,7 @@ public class ThymeleafConfiguration implements WebMvcConfigurer, ApplicationCont
     }
 
     @Bean
-    public ThymeleafViewResolver viewResolver(){
+    public ThymeleafViewResolver viewResolver() {
         ThymeleafViewResolver viewResolver = new ThymeleafViewResolver();
         viewResolver.setTemplateEngine(templateEngine());
         return viewResolver;

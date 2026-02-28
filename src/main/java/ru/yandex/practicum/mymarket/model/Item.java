@@ -20,7 +20,8 @@ public class Item {
     private String imgPath;
     private Long price;
 
-    protected Item() {}
+    protected Item() {
+    }
 
     public Item(@NotNull final String title,
                 @NotNull final String description,

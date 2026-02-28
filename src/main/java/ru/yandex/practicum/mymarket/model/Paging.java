@@ -25,7 +25,6 @@ public record Paging(int pageNumber,
         return hasPrevious;
     }
 
-
     public boolean getHasNext() {
         return hasNext;
     }
