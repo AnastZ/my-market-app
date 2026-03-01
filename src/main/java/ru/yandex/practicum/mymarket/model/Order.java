@@ -7,7 +7,6 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -29,12 +28,12 @@ public class Order {
 
     public void addOrderItem(@NotNull final OrderItem orderItem) {
         orderItems.add(orderItem);
-        orderItem.setOrder(this);
+        orderItem.setOrderId(this);
     }
 
     public void removeOrderItem(@NotNull final OrderItem orderItem) {
         orderItems.remove(orderItem);
-        orderItem.setOrder(null);
+        orderItem.setOrderId(null);
     }
 
     public Long getId() {

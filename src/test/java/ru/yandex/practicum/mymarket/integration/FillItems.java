@@ -1,6 +1,7 @@
 package ru.yandex.practicum.mymarket.integration;
 
 import org.springframework.mock.web.MockHttpSession;
+import reactor.core.publisher.Flux;
 import ru.yandex.practicum.mymarket.model.Item;
 import ru.yandex.practicum.mymarket.repositories.ItemRepository;
 
@@ -14,11 +15,10 @@ public interface FillItems {
         return Stream.iterate(1L, n -> n + 1L).limit(21);
     }
 
-    default List<Item> fillItems(final ItemRepository itemRepository){
-        final List<Item> items = new ArrayList<>();
-        itemIds().forEach(itemId -> {
-            items.add(new Item("title" + itemId, "desc" + itemId, "path", itemId));
-        });
-        return itemRepository.saveAll(items);
+    default Flux<Item> fillItems(final ItemRepository itemRepository){
+        return Flux.fromIterable(itemIds().toList())
+                .map(itemId -> new Item("title" + itemId, "desc" + itemId, "path", itemId))
+                .collectList()
+                .flatMapMany(itemRepository::saveAll);
     }
 }

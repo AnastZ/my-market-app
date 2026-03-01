@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: my-market
+    r2dbc:
+      url: ${DB_URL:r2dbc:h2:mem:///market};DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+      username: ${DB_USER:sa}
+      password: ${DB_PASSWORD:sa}
+    sql:
+      init:
+        mode: always
+    codec:
+      max-in-memory-size: 20MB
+item:
+  image:
+    path: classpath:images/
+  list-size: 3
+

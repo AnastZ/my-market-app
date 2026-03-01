@@ -24,7 +24,7 @@ public class DTOConfig {
     @Bean
     public DTOConvertor<OrderItem, OrderItemDTO> orderItemDTOConvertor() {
         return it -> {
-            return new OrderItemDTO(it.getItem().getId(), it.getItem().getTitle(), it.getPrice(), it.getCount());
+            return new OrderItemDTO(it.getItemId().getId(), it.getItemId().getTitle(), it.getPrice(), it.getCount());
         };
     }
 
@@ -42,11 +42,8 @@ public class DTOConfig {
             return new OrderDTO(order.getId(), items, totalSum);
         };
     }
-
     @Bean
-    public DTOConvertor<CartItem, OrderItem> getCartItemDTOConvertor() {
-        return ci -> {
-            return new OrderItem(ci.getItem(), ci.getItem().getPrice(), ci.getCount());
-        };
+    public DTOConvertor<CartItem, CartItem> cartItemDTOConvertor() {
+
     }
 }

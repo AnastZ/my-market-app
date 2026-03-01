@@ -100,7 +100,7 @@ public class OrderService {
                 .flatMap(items -> orderRepository.save(new Order())
                         .flatMap(order -> {
                             final List<OrderItem> orderItems = items.stream()
-                                    .map(item -> new OrderItem(order, item))
+                                    .map(item -> new OrderItem(order.getId(), item))
                                     .toList();
                             return orderItemRepository.saveAll(orderItems)
                                     .collectList()

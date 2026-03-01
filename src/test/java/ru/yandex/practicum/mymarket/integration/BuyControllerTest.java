@@ -2,8 +2,11 @@ package ru.yandex.practicum.mymarket.integration;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 import ru.yandex.practicum.mymarket.repositories.CartItemRepository;
 import ru.yandex.practicum.mymarket.repositories.CartRepository;
 import ru.yandex.practicum.mymarket.repositories.ItemRepository;
@@ -28,14 +31,21 @@ public class BuyControllerTest extends AbstractController implements FillCart{
     private final String path = "/buy";
     @Test
     public void buy_success() throws Exception {
-        final MockHttpSession  session = new MockHttpSession();
-        FillCart.super.fillDb(session, cartRepository,  itemRepository, cartItemRepository);
 
-        mockMvc.perform(post(path)
-                        .contentType(MediaType.TEXT_HTML)
-                        .accept(MediaType.TEXT_HTML)
-                        .characterEncoding("utf-8")
-                        .session(session))
-                .andExpect(status().isFound());
+
+        final Mono<Void> testChain = fillDb(sessionId, cartRepository, itemRepository, cartItemRepository)
+                .collectList()
+                .then(Mono.fromRunnable(() -> {
+                    webTestClient.post()
+                            .uri("/buy")
+                            .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE)
+                            .cookie("SESSION", sessionId)
+                            .exchange()
+                            .expectStatus().is3xxRedirection()
+                            .expectHeader().valueMatches(HttpHeaders.LOCATION, ".*/orders/.*");
+                }));
+        StepVerifier.create(testChain)
+                .verifyComplete();
+
     }
 }

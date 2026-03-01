@@ -14,7 +14,7 @@ import ru.yandex.practicum.mymarket.model.Item;
 import ru.yandex.practicum.mymarket.repositories.dao.ItemDAO;
 
 @Repository
-public interface ItemRepository extends ReactiveSortingRepository<Item, Long> {
+public interface ItemRepository extends ReactiveCrudRepository<Item, Long>{
 
     @Query("SELECT new ru.yandex.practicum.mymarket.repositories.dao.ItemDAO(item, COALESCE(ci.count, 0L)) " +
             " FROM Item item " +

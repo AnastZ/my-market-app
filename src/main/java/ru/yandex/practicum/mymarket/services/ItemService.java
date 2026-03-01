@@ -6,12 +6,7 @@ import javassist.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.relational.core.query.Criteria;
-import org.springframework.data.relational.core.query.CriteriaDefinition;
-import org.springframework.data.relational.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -19,19 +14,14 @@ import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mymarket.controllers.ItemController;
 import ru.yandex.practicum.mymarket.controllers.dto.DTOConvertor;
 import ru.yandex.practicum.mymarket.controllers.dto.ItemDTO;
-import ru.yandex.practicum.mymarket.model.Cart;
 import ru.yandex.practicum.mymarket.model.CartItem;
 import ru.yandex.practicum.mymarket.controllers.dto.ItemsDTO;
-import ru.yandex.practicum.mymarket.model.Item;
 import ru.yandex.practicum.mymarket.model.Paging;
 import ru.yandex.practicum.mymarket.repositories.ItemRepository;
 import ru.yandex.practicum.mymarket.repositories.dao.ItemDAO;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-
-import static org.springframework.data.domain.ExampleMatcher.matching;
 
 @Service
 public class ItemService {
@@ -161,7 +151,7 @@ public class ItemService {
                         .switchIfEmpty(notFound(itemId))
                         .flatMap(item -> cartService.getOrCreateBySessionId(sessionId)
                                 .switchIfEmpty(Mono.error(new NotFoundException("Корзина не найдена.")))
-                                .flatMap(c -> cartItemService.save(new CartItem(c, item)))))
+                                .flatMap(c -> cartItemService.save(new CartItem(c.getId(), item.getId(), item.getPrice())))))
                 .flatMap(item -> {
                     item.incrementCount();
                     return cartItemService.save(item);

@@ -1,38 +1,50 @@
 package ru.yandex.practicum.mymarket.model;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.util.Objects;
 
+@Table("cart_item")
 public class CartItem {
+
     @Id
     @ReadOnlyProperty
     private Long id;
-
-    private Cart cart;
-    private Item item;
+    @NotNull
+    private Long cartId;
+    @NotNull
+    private Long itemId;
+    @NotNull
+    private Long oneItemPrice;
+    @Min(1)
     private int count;
     @Version
     private Long version;
-    protected CartItem() {
-    }
 
-    /**
-     * Добавление товара в корзину. Количество товаров = 1.
-     *
-     * @param cart корзина, привязанная к id сессии.
-     * @param item товар.
-     */
-    public CartItem(@NotNull final Cart cart,
-                    @NotNull final Item item) {
-        this.cart = cart;
-        this.item = item;
+    protected CartItem() {}
+
+    public CartItem(@NotNull final Long cartId,
+                    @NotNull final Long itemId,
+                    @NotNull final Long oneItemPrice) {
+        this.cartId = cartId;
+        this.itemId = itemId;
         this.count = 1;
+        this.oneItemPrice = oneItemPrice;
     }
-
+    public CartItem(@NotNull final Long cartId,
+                    @NotNull final Long itemId,
+                    @Min(1) final int count,
+                    @NotNull final Long oneItemPrice) {
+        this.cartId = cartId;
+        this.itemId = itemId;
+        this.count = count;
+        this.oneItemPrice = oneItemPrice;
+    }
     public void incrementCount() {
         this.count++;
     }
@@ -41,37 +53,50 @@ public class CartItem {
         this.count--;
     }
 
-    public void setCount(int count) {
-        this.count = count;
+    public Long getId() {
+        return id;
+    }
+
+    public Long getCartId() {
+        return cartId;
+    }
+
+    public Long getItemId() {
+        return itemId;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public Long getOneItemPrice() {
+        return oneItemPrice;
     }
 
     public int getCount() {
         return count;
     }
 
-    public Item getItem() {
-        return item;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        CartItem cartItem = (CartItem) o;
-        return count == cartItem.count && Objects.equals(id, cartItem.id) && Objects.equals(cart, cartItem.cart) && Objects.equals(item, cartItem.item);
+        CartItem that = (CartItem) o;
+        return count == that.count && Objects.equals(id, that.id) && Objects.equals(cartId, that.cartId) && Objects.equals(itemId, that.itemId) && Objects.equals(version, that.version);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, cart, item);
+        return Objects.hash(id, cartId, itemId, count, version);
     }
 
     @Override
     public String toString() {
-        return "CartItem{" +
+        return "CartItemDAO{" +
                 "id=" + id +
-                ", cart=" + cart +
-                ", item=" + item +
+                ", cartId=" + cartId +
+                ", itemId=" + itemId +
                 ", count=" + count +
+                ", version=" + version +
                 '}';
     }
 }

@@ -50,7 +50,7 @@ public class OrderControllerTest extends AbstractController implements FillItems
                 .forEach(order -> {
                     orders.add(order);
                     final Item it = items.get(item.get());
-                    order.addOrderItem(new OrderItem(it, it.getPrice(), count.get()));
+                    order.addOrderItem(new OrderItem());
                 });
         orderRepository.saveAll(orders);
     }

@@ -13,9 +13,9 @@ public class OrderItem {
     @ReadOnlyProperty
     private Long id;
 
-    private Order order;
+    private Long orderId;
 
-    private Item item;
+    private Long itemId;
 
     private Long price;
 
@@ -26,11 +26,11 @@ public class OrderItem {
     protected OrderItem() {
     }
 
-    public OrderItem(@NotNull final Order order,
+    public OrderItem(@NotNull final Long orderId,
                      @NotNull final CartItem item) {
-        this.order = order;
-        this.item = item.getItem();
-        this.price = item.getItem().getPrice();
+        this.orderId = orderId;
+        this.itemId = item.getItemId();
+        this.price = item.getOneItemPrice();
         this.count = item.getCount();
     }
 
@@ -38,8 +38,8 @@ public class OrderItem {
         return id;
     }
 
-    public Item getItem() {
-        return item;
+    public Item getItemId() {
+        return itemId;
     }
 
     public Long getPrice() {
@@ -50,27 +50,27 @@ public class OrderItem {
         return count;
     }
 
-    public void setOrder(Order order) {
-        this.order = order;
+    public void setOrderId(Order orderId) {
+        this.orderId = orderId;
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         OrderItem orderItem = (OrderItem) o;
-        return count == orderItem.count && Objects.equals(id, orderItem.id) && Objects.equals(item, orderItem.item) && Objects.equals(price, orderItem.price);
+        return count == orderItem.count && Objects.equals(id, orderItem.id) && Objects.equals(itemId, orderItem.itemId) && Objects.equals(price, orderItem.price);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, item, price, count);
+        return Objects.hash(id, itemId, price, count);
     }
 
     @Override
     public String toString() {
         return "OrderItem{" +
                 "id=" + id +
-                ", item=" + item +
+                ", item=" + itemId +
                 ", price=" + price +
                 ", count=" + count +
                 '}';
