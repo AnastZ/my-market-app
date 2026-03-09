@@ -9,42 +9,50 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.util.Objects;
 
-@Table("cart_item")
+@Table(name = "cart_item")
 public class CartItem {
 
     @Id
-    @ReadOnlyProperty
     private Long id;
     @NotNull
     private Long cartId;
     @NotNull
     private Long itemId;
     @NotNull
+    private String title;
+    @NotNull
     private Long oneItemPrice;
     @Min(1)
-    private int count;
+    private Long count;
     @Version
     private Long version;
 
-    protected CartItem() {}
+    protected CartItem() {
+    }
 
     public CartItem(@NotNull final Long cartId,
                     @NotNull final Long itemId,
+                    @NotNull final String title,
                     @NotNull final Long oneItemPrice) {
         this.cartId = cartId;
         this.itemId = itemId;
-        this.count = 1;
+        this.title = title;
+        this.count = 1L;
         this.oneItemPrice = oneItemPrice;
     }
+
     public CartItem(@NotNull final Long cartId,
                     @NotNull final Long itemId,
-                    @Min(1) final int count,
+                    @NotNull final String title,
+                    @NotNull @Min(1) final Long count,
                     @NotNull final Long oneItemPrice) {
         this.cartId = cartId;
         this.itemId = itemId;
+        this.title = title;
         this.count = count;
         this.oneItemPrice = oneItemPrice;
     }
+
     public void incrementCount() {
         this.count++;
     }
@@ -65,6 +73,10 @@ public class CartItem {
         return itemId;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
     public Long getVersion() {
         return version;
     }
@@ -73,7 +85,7 @@ public class CartItem {
         return oneItemPrice;
     }
 
-    public int getCount() {
+    public Long getCount() {
         return count;
     }
 
@@ -81,7 +93,7 @@ public class CartItem {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         CartItem that = (CartItem) o;
-        return count == that.count && Objects.equals(id, that.id) && Objects.equals(cartId, that.cartId) && Objects.equals(itemId, that.itemId) && Objects.equals(version, that.version);
+        return count.equals(that.count) && Objects.equals(id, that.id) && Objects.equals(cartId, that.cartId) && Objects.equals(itemId, that.itemId) && Objects.equals(version, that.version);
     }
 
     @Override
@@ -91,10 +103,12 @@ public class CartItem {
 
     @Override
     public String toString() {
-        return "CartItemDAO{" +
+        return "CartItem{" +
                 "id=" + id +
                 ", cartId=" + cartId +
                 ", itemId=" + itemId +
+                ", title='" + title + '\'' +
+                ", oneItemPrice=" + oneItemPrice +
                 ", count=" + count +
                 ", version=" + version +
                 '}';

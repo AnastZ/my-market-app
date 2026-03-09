@@ -2,6 +2,8 @@ package ru.yandex.practicum.mymarket.services;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
@@ -14,6 +16,8 @@ import java.util.List;
 
 @Service
 public class CartService {
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
     private final CartRepository cartRepository;
     private ItemService itemService;
 
@@ -35,7 +39,7 @@ public class CartService {
     @Transactional
     public Mono<Cart> getOrCreateBySessionId(@NotNull final String sessionId) {
         return cartRepository.findBySessionId(sessionId)
-                .switchIfEmpty(cartRepository.save(new Cart(sessionId)));
+                .switchIfEmpty(Mono.defer(() -> cartRepository.save(new Cart(sessionId))));
     }
 
     @Transactional(readOnly = true)

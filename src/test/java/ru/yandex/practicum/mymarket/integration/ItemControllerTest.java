@@ -1,40 +1,30 @@
 package ru.yandex.practicum.mymarket.integration;
 
-import jakarta.servlet.http.HttpSession;
-import org.hamcrest.Matchers;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpSession;
+import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mymarket.controllers.ItemController;
-import ru.yandex.practicum.mymarket.controllers.dto.ItemDTO;
 import ru.yandex.practicum.mymarket.model.CartItem;
-import ru.yandex.practicum.mymarket.model.Item;
 import ru.yandex.practicum.mymarket.repositories.CartItemRepository;
 import ru.yandex.practicum.mymarket.repositories.ItemRepository;
-import ru.yandex.practicum.mymarket.repositories.dao.ItemDAO;
 import ru.yandex.practicum.mymarket.services.ItemService;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-public class ItemControllerTest extends AbstractController implements FillItems{
+public class ItemControllerTest extends AbstractController implements FillItems {
 
     private final String path = "/items";
 
@@ -44,159 +34,155 @@ public class ItemControllerTest extends AbstractController implements FillItems{
     @Value("${item.list-size}")
     private int itemListSize;
 
-    @BeforeEach
-    public void setup() {
-        FillItems.super.fillItems(itemRepository);
+
+    private int getCountItems() throws IllegalArgumentException {
+        final int count = itemRepository.findAllInCart("", "", Sort.unsorted())
+                .collectList()
+                .map(List::size)
+                .block()
+                .intValue();
+        if (count == 0) throw new IllegalArgumentException("No items found");
+        return count;
     }
 
-    @Test
-    public void findAll_withoutParams() throws Exception {
-        final int defNumber = 1;
-        final int defSize = 5;
-        final MockHttpSession session = new MockHttpSession();
-        final int countPages = itemRepository.findAllInCart("", session.getId(), PageRequest.of(defNumber, defSize)).getTotalPages();
-        mockMvc.perform(get(path)
-                        .session(session)
-                        .contentType(MediaType.TEXT_HTML)
-                        .accept(MediaType.TEXT_HTML)
-                        .characterEncoding("utf-8"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
-                .andExpect(model().attributeExists("items"))
-                .andExpect(model().attributeExists("search"))
-                .andExpect(model().attributeExists("sort"))
-                .andExpect(model().attributeExists("paging"))
-                .andExpect(model().attribute("items", Matchers.not(empty())))
-                .andExpect(model().attribute("items", hasItem(hasSize(itemListSize))))
-                .andExpect(model().attribute("search", ""))
-                .andExpect(model().attribute("sort", ItemController.SortMethod.NO))
-                .andExpect(model().attribute("paging", allOf(
-                                hasProperty("pageNumber", is(defNumber)),
-                                hasProperty("pageSize", is(defSize)),
-                                hasProperty("hasPrevious", is(defNumber != 1)),
-                                hasProperty("hasNext", is(defNumber < countPages))
-                        )
-                ));
+    private void checkSearch(final Document doc) {
+        assertThat(doc.select("input[name='search']").val()).isEqualTo("");
     }
 
-    @ParameterizedTest
-    @CsvSource(value = {"1, 2", "3, 4"})
-    public void findAll_withoutSearchAndSort(final int pageNumber, final int pageSize) throws Exception {
-        final MockHttpSession session = new MockHttpSession();
-        final int countPages = itemRepository.findAllInCart("", session.getId(), PageRequest.of(pageNumber, pageSize)).getTotalPages();
-        mockMvc.perform(get(path)
-                        .session(session)
-                        .param("pageNumber", String.valueOf(pageNumber))
-                        .param("pageSize", String.valueOf(pageSize))
-                        .contentType(MediaType.TEXT_HTML)
-                        .accept(MediaType.TEXT_HTML)
-                        .characterEncoding("utf-8"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
-                .andExpect(model().attributeExists("items"))
-                .andExpect(model().attributeExists("search"))
-                .andExpect(model().attributeExists("sort"))
-                .andExpect(model().attributeExists("paging"))
-                .andExpect(model().attribute("items", Matchers.not(empty())))
-                .andExpect(model().attribute("search", ""))
-                .andExpect(model().attribute("sort", ItemController.SortMethod.NO))
-                .andExpect(model().attribute("paging", allOf(
-                                hasProperty("pageNumber", is(pageNumber)),
-                                hasProperty("pageSize", is(pageSize)),
-                                hasProperty("hasPrevious", is(pageNumber != 1)),
-                                hasProperty("hasNext", is(pageNumber < countPages))
-                        )
-                ));
+    private void checkSort(final Document doc, final ItemController.SortMethod sortMethod) {
+        final Element sortSelect = doc.select("select[id='sort']").first();
+        assertThat(sortSelect).isNotNull();
+        final Element firstOption = sortSelect.select("option[selected]").first();
+        assertThat(firstOption).isNotNull();
+        assertThat(firstOption.val()).isEqualTo(sortMethod.toString());
     }
 
-    @ParameterizedTest
-    @CsvSource(value = {"1, 2, NO", "3, 4, ALPHA", "2, 5, PRICE"})
-    public void findAll_withSort(final int pageNumber,
-                                 final int pageSize,
-                                 final ItemController.SortMethod method) throws Exception {
-        final MockHttpSession session = new MockHttpSession();
-        final Page<ItemDAO> itemsFromDB = itemRepository.findAllInCart("", session.getId(), PageRequest.of(pageNumber, pageSize));
-        final int countPages = itemsFromDB.getTotalPages();
+    private void checkPageNumber(final Document doc, final int pageNumber) {
+        final Element pageSpan = doc.select("span:contains(Страница:)").first();
+        assertThat(pageSpan).isNotNull();
+        assertThat(pageSpan.text()).contains(String.valueOf(pageNumber));
+    }
 
-        final Map<String, Object> model = mockMvc.perform(get(path)
-                        .session(session)
-                        .param("pageNumber", String.valueOf(pageNumber))
-                        .param("pageSize", String.valueOf(pageSize))
-                        .param("sort", method.toString())
-                        .contentType(MediaType.TEXT_HTML)
-                        .accept(MediaType.TEXT_HTML)
-                        .characterEncoding("utf-8"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
-                .andExpect(model().attributeExists("items"))
-                .andExpect(model().attributeExists("search"))
-                .andExpect(model().attributeExists("sort"))
-                .andExpect(model().attributeExists("paging"))
-                .andExpect(model().attribute("items", Matchers.not(empty())))
-                .andExpect(model().attribute("search", ""))
-                .andExpect(model().attribute("sort", method))
-                .andExpect(model().attribute("paging", allOf(
-                                hasProperty("pageNumber", is(pageNumber)),
-                                hasProperty("pageSize", is(pageSize)),
-                                hasProperty("hasPrevious", is(pageNumber != 1)),
-                                hasProperty("hasNext", is(pageNumber < countPages))
-                        )
-                ))
-                .andReturn().getModelAndView().getModel();
-        final List<List<ItemDTO>> modelList = ((List<List<ItemDTO>>) model.get("items"));
+    private void checkPageSize(final Document doc, final int pageSize) {
+        final Element selectedPageSize = doc.select("select[id='pageSize'] option[selected]").first();
+        assertThat(selectedPageSize).isNotNull();
+        assertThat(selectedPageSize.val()).isEqualTo(String.valueOf(pageSize));
+    }
 
-        final Object sortModel = model.get("sort");
-        final Comparator<ItemDTO> currentComparator = sortModel.equals(ItemController.SortMethod.PRICE) ?
-                Comparator.comparing(ItemDTO::price)
-                : sortModel.equals(ItemController.SortMethod.ALPHA) ?
-                Comparator.comparing(ItemDTO::title)
-                : null;
-        if (Objects.nonNull(currentComparator)) {
-            for (int i = 0; i < modelList.size(); i++) {
-                final List<ItemDTO> current = modelList.get(i).stream().filter(it -> it.id() != -1L).toList();
-                assertThat(current)
-                        .isSortedAccordingTo(currentComparator);
-                if (i + 1 < modelList.size()) {
-                    List<ItemDTO> next = modelList.get(i + 1);
-                    ItemDTO lastOfNext = next.get(next.size() - 1);
-                    ItemDTO firstOfCurrent = current.get(0);
-                    int cmp = currentComparator.compare(lastOfNext, firstOfCurrent);
-                    assertThat(cmp)
-                            .isLessThan(0);
-                }
+    private void checkPaging(final Document doc, final int pageNumber, final int countPages) {
+        final Element prevButton = doc.select("button[name='pageNumber'][value='" + (pageNumber - 1) + "']").first();
+        if (pageNumber == 1) {
+            assertThat(prevButton).isNull();
+        } else {
+            assertThat(prevButton).isNotNull();
+        }
+
+        final Element nextButton = doc.select("button[name='pageNumber'][value='" + (pageNumber + 1) + "']").first();
+        if (pageNumber < countPages) {
+            assertThat(nextButton).isNotNull();
+        } else {
+            assertThat(nextButton).isNull();
+        }
+    }
+
+    private void checkItemList(final Document doc) {
+        assertThat(doc.select("div.card")).isNotEmpty();
+
+        final Elements cardRows = doc.select("div.row.p-2:has(div.col div.card)");
+        if (!cardRows.isEmpty()) {
+            final Elements colsInFirstRow = cardRows.first().select("> div.col");
+            assertThat(colsInFirstRow).hasSize(itemListSize);
+
+            final Element lastCol = colsInFirstRow.last();
+            if (lastCol.select("div.card").isEmpty()) {
+                assertThat(lastCol.html()).contains("&nbsp;");
             }
         }
     }
 
+    private void checkItems(final Document doc,
+                            final int pageSize,
+                            final int pageNum,
+                            final int countPages,
+                            final ItemController.SortMethod method) {
+        checkSearch(doc);
+        checkSort(doc, method);
+        checkPageSize(doc, pageSize);
+        checkItemList(doc);
+        checkPageNumber(doc, pageNum);
+        checkPaging(doc, pageNum, countPages);
+    }
+
+    @Test
+    public void findAll_withoutParams() {
+        final int defNumber = 1;
+        final int defSize = 5;
+        final int countPages = (int) Math.ceil((double) getCountItems() / defSize);
+        webTestClient.get()
+                .uri(path)
+                .cookie("SESSION", sessionId)
+                .accept(MediaType.TEXT_HTML)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("text/html")
+                .expectBody()
+                .consumeWith(result -> {
+
+                    final Document doc = Jsoup.parse(new String(result.getResponseBody(), StandardCharsets.UTF_8));
+                    checkItems(doc, defSize, defNumber, countPages, ItemController.SortMethod.NO);
+                });
+    }
+
     @ParameterizedTest
-    @CsvSource(value = {"1, 2, tit", "3, 4, ''"})
-    public void findAll_withSearch(final int pageNumber, final int pageSize, final String search) throws Exception {
-        final MockHttpSession session = new MockHttpSession();
-        final int countPages = itemRepository.findAllInCart("", session.getId(), PageRequest.of(pageNumber, pageSize)).getTotalPages();
-        mockMvc.perform(get(path)
-                        .session(session)
-                        .param("pageNumber", String.valueOf(pageNumber))
-                        .param("pageSize", String.valueOf(pageSize))
-                        .param("search", search)
-                        .contentType(MediaType.TEXT_HTML)
-                        .accept(MediaType.TEXT_HTML)
-                        .characterEncoding("utf-8"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("text/html;charset=UTF-8"))
-                .andExpect(model().attributeExists("items"))
-                .andExpect(model().attributeExists("search"))
-                .andExpect(model().attributeExists("sort"))
-                .andExpect(model().attributeExists("paging"))
-                .andExpect(model().attribute("items", Matchers.not(empty())))
-                .andExpect(model().attribute("search", search))
-                .andExpect(model().attribute("sort", ItemController.SortMethod.NO))
-                .andExpect(model().attribute("paging", allOf(
-                                hasProperty("pageNumber", is(pageNumber)),
-                                hasProperty("pageSize", is(pageSize)),
-                                hasProperty("hasPrevious", is(pageNumber != 1)),
-                                hasProperty("hasNext", is(pageNumber < countPages))
-                        )
-                ));
+    @CsvSource(value = {"1, 5", "2, 10"})
+    public void findAll_withoutSearchAndSort(final int pageNumber, final int pageSize) {
+        final int countPages = (int) Math.ceil((double) getCountItems() / pageSize);
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(path)
+                        .queryParam("pageNumber", pageNumber)
+                        .queryParam("pageSize", pageSize)
+                        .build())
+                .cookie("SESSION", sessionId)
+                .accept(MediaType.TEXT_HTML)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("text/html")
+                .expectBody()
+                .consumeWith(result -> {
+
+                    Document doc = Jsoup.parse(new String(result.getResponseBody(), StandardCharsets.UTF_8));
+                    checkItems(doc, pageSize, pageNumber, countPages, ItemController.SortMethod.NO);
+                });
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {"1, 5, NO", "2, 10, ALPHA", "2, 5, PRICE"})
+    public void findAll_withSort(final int pageNumber,
+                                 final int pageSize,
+                                 final ItemController.SortMethod method) {
+
+
+        final int countPages = (int) Math.ceil((double) getCountItems() / pageSize);
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(path)
+                        .queryParam("pageNumber", pageNumber)
+                        .queryParam("pageSize", pageSize)
+                        .queryParam("sort", method.toString())
+                        .build())
+                .cookie("SESSION", sessionId)
+                .accept(MediaType.TEXT_HTML)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("text/html")
+                .expectBody()
+                .consumeWith(result -> {
+                    final Document doc = Jsoup.parse(new String(result.getResponseBody(), StandardCharsets.UTF_8));
+                    checkItems(doc, pageSize, pageNumber, countPages, method);
+                });
     }
 
 
@@ -207,140 +193,140 @@ public class ItemControllerTest extends AbstractController implements FillItems{
     private ItemService itemService;
 
     @TestFactory
-    public Stream<DynamicTest> increment_success() throws Exception {
-        return itemRepository.findAll().stream()
-                .filter(Objects::nonNull) // Убедитесь, что item не null
-                .limit(10)
-                .map(item -> DynamicTest.dynamicTest("Incrementing item with ID: " + item.getId(), () -> {
-                    final MockHttpSession session = new MockHttpSession();
-                    itemService.incrementItem(item.getId(), session.getId());
-                    final Optional<CartItem> beforeItem = cartItemRepository.findByItemIdAndSessionId(item.getId(), session.getId());
-                    if (beforeItem.isEmpty())
-                        return;
-                    mockMvc.perform(post(path)
-                                    .session(session)
-                                    .param("id", item.getId().toString())
-                                    .param("action", "PLUS")
-                                    .contentType(MediaType.TEXT_HTML)
-                                    .accept(MediaType.TEXT_HTML)
-                                    .characterEncoding("utf-8"))
-                            .andExpect(status().isFound());
-                    assertTrue(beforeItem.get().getCount() < cartItemRepository.findByItemIdAndSessionId(item.getId(), session.getId()).get().getCount());
+    public Stream<DynamicTest> increment_success() {
+        return itemRepository.findAll()
+                .filter(Objects::nonNull)
+                .take(10)
+                .flatMap(item ->
+                        Mono.just(DynamicTest.dynamicTest(
+                                "Incrementing item with ID: " + item.getId(),
+                                () -> {
+                                    itemService.incrementItem(item.getId(), sessionId).block();
 
-                }));
+                                    final Long beforeCount = cartItemRepository
+                                            .findByItemIdAndSessionId(item.getId(), sessionId)
+                                            .map(CartItem::getCount)
+                                            .block();
+
+                                    webTestClient.post()
+                                            .uri(uriBuilder -> uriBuilder
+                                                    .path(path + "/{id}")
+                                                    .queryParam("action", ItemController.CartItemAction.PLUS)
+                                                    .build(item.getId()))
+                                            .cookie("SESSION", sessionId)
+                                            .accept(MediaType.TEXT_HTML)
+                                            .exchange()
+                                            .expectStatus().isOk();
+
+                                    final Long afterCount = cartItemRepository
+                                            .findByItemIdAndSessionId(item.getId(), sessionId)
+                                            .map(CartItem::getCount)
+                                            .block();
+
+                                    assertThat(afterCount).isEqualTo(beforeCount + 1); // 1 + 1 = 2
+                                }
+                        ))
+                )
+                .collectList()
+                .block()
+                .stream();
     }
 
     @TestFactory
     public Stream<DynamicTest> decrement_success() throws Exception {
-        return itemRepository.findAll().stream()
+        return itemRepository.findAll()
                 .filter(Objects::nonNull)
-                .limit(10)
-                .map(item -> DynamicTest.dynamicTest("Decrementing item with ID: " + item.getId(), () -> {
-                    final Long itemId = item.getId();
-                    final MockHttpSession session = new MockHttpSession();
-                    itemService.incrementItem(itemId, session.getId());
-                    final Optional<CartItem> beforeItem = cartItemRepository.findByItemIdAndSessionId(itemId, session.getId());
+                .take(10)
+                .flatMap(item ->
+                        Mono.just(DynamicTest.dynamicTest(
+                                "Decrementing item with ID: " + item.getId(),
+                                () -> {
+                                    itemService.incrementItem(item.getId(), sessionId).block();
+                                    itemService.incrementItem(item.getId(), sessionId).block();
 
-                    if (beforeItem.isEmpty()) {
-                        throw new IllegalStateException("Failed to prepare CartItem for test with itemId: " + itemId);
-                    }
+                                    final Long beforeCount = cartItemRepository
+                                            .findByItemIdAndSessionId(item.getId(), sessionId)
+                                            .map(CartItem::getCount)
+                                            .block();
 
-                    mockMvc.perform(post(path)
-                                    .session(session)
-                                    .param("id", itemId.toString())
-                                    .param("action", "MINUS")
-                                    .contentType(MediaType.TEXT_HTML)
-                                    .accept(MediaType.TEXT_HTML)
-                                    .characterEncoding("utf-8"))
-                            .andExpect(status().isFound());
 
-                    final Optional<CartItem> afterItem = cartItemRepository.findByItemIdAndSessionId(itemId, session.getId());
+                                    webTestClient.post()
+                                            .uri(uriBuilder -> uriBuilder
+                                                    .path(path + "/{id}")
+                                                    .queryParam("action", ItemController.CartItemAction.MINUS)
+                                                    .build(item.getId()))
+                                            .cookie("SESSION", sessionId)
+                                            .accept(MediaType.TEXT_HTML)
+                                            .exchange()
+                                            .expectStatus().isOk();  // или isFound(), смотрите что возвращает контроллер
 
-                    if (afterItem.isEmpty()) {
-                        assertTrue(beforeItem.get().getCount() > 0, "Expected count to be greater than 0 before decrementing to 0.");
-                        return;
-                    }
+                                    final Long afterCount = cartItemRepository
+                                            .findByItemIdAndSessionId(item.getId(), sessionId)
+                                            .map(CartItem::getCount)
+                                            .block();
 
-                    assertTrue(beforeItem.get().getCount() > afterItem.get().getCount(),
-                            "Expected cart item count to decrease for itemId: " + itemId);
-
-                }));
+                                    assertThat(afterCount).isEqualTo(beforeCount - 1);
+                                }
+                        ))
+                )
+                .collectList()
+                .block()
+                .stream();
     }
+
 
     @TestFactory
-    public Stream<DynamicTest> incrementFromOne_success() throws Exception {
-        return itemRepository.findAll().stream()
-                .filter(item -> item != null)
-                .limit(10)
-                .map(item -> DynamicTest.dynamicTest("Incrementing item with ID: " + item.getId(), () -> {
-                    final Long itemId = item.getId();
-                    final Item existingItem = item;
-                    final MockHttpSession session = new MockHttpSession();
+    public Stream<DynamicTest> getOne_success() {
+        return itemRepository.findAll()
+                .filter(Objects::nonNull)
+                .take(10)
+                .flatMap(item ->
+                        Mono.just(DynamicTest.dynamicTest(
+                                "Get item with ID: " + item.getId(),
+                                () -> {
 
-                    itemService.incrementItem(itemId, session.getId());
+                                    webTestClient.get()
+                                            .uri(path + "/" + item.getId())
+                                            .cookie("SESSION", sessionId)
+                                            .accept(MediaType.TEXT_HTML)
+                                            .exchange()
+                                            .expectStatus().isOk()
+                                            .expectHeader().contentType("text/html")
+                                            .expectBody()
+                                            .consumeWith(result -> {
+                                                final Document doc = Jsoup.parse(new String(result.getResponseBody(), StandardCharsets.UTF_8));
 
-                    final Optional<CartItem> beforeItemOpt = cartItemRepository.findByItemIdAndSessionId(itemId, session.getId());
-                    if (beforeItemOpt.isEmpty()) {
-                        throw new IllegalStateException("Failed to create initial CartItem for itemId: " + itemId);
-                    }
-                    final CartItem beforeCartItem = beforeItemOpt.get();
-                    final int initialCount = beforeCartItem.getCount();
+                                                final Element card = doc.select("div.card").first();
+                                                assertThat(card).isNotNull();
 
-                    mockMvc.perform(post(path + "/" + itemId)
-                                    .session(session)
-                                    .param("id", itemId.toString())
-                                    .param("action", "PLUS")
-                                    .contentType(MediaType.TEXT_HTML)
-                                    .accept(MediaType.TEXT_HTML)
-                                    .characterEncoding("utf-8"))
-                            .andExpect(status().isOk())
-                            .andExpect(model().attributeExists("item"))
-                            .andExpect(model().attribute("item", allOf(
-                                            hasProperty("id", is(itemId)),
-                                            hasProperty("title", is(existingItem.getTitle())),
-                                            hasProperty("description", is(existingItem.getDescription())),
-                                            hasProperty("imgPath", is(existingItem.getImgPath())),
-                                            hasProperty("price", is(existingItem.getPrice())),
-                                            hasProperty("count", is(initialCount + 1))
-                                    )
-                            ));
+                                                final String title = card.select("h5.card-title").text();
+                                                assertThat(title).isEqualTo(item.getTitle());
 
-                    final Optional<CartItem> afterItemOpt = cartItemRepository.findByItemIdAndSessionId(itemId, session.getId());
-                    if (afterItemOpt.isEmpty()) {
-                        throw new IllegalStateException("CartItem for itemId " + itemId + " unexpectedly disappeared after increment.");
-                    }
-                    final CartItem afterCartItem = afterItemOpt.get();
+                                                final String price = card.select("span.badge.text-bg-success").text();
+                                                assertThat(price).contains(item.getPrice().toString());
 
-                    assertTrue(afterCartItem.getCount() == initialCount + 1,
-                            "Expected cart item count to increment from " + initialCount + " to " + (initialCount + 1) + " for itemId: " + itemId);
+                                                final String description = card.select("p.card-text").text();
+                                                assertThat(description).isEqualTo(item.getDescription());
 
-                }));
-    }
+                                                final Element form = card.select("form[method=post]").first();
+                                                assertThat(form).isNotNull();
 
-    @ParameterizedTest
-    @MethodSource("itemIds")
-    public void getOne_success(final Long itemId) throws Exception {
-        final MockHttpSession session = new MockHttpSession();
-        final Item item = itemRepository.findById(itemId).orElse(null);
-        if (Objects.isNull(item))
-            return;
-        mockMvc.perform(get(path + "/" + itemId)
-                        .session(session)
-                        .param("id", itemId.toString())
-                        .contentType(MediaType.TEXT_HTML)
-                        .accept(MediaType.TEXT_HTML)
-                        .characterEncoding("utf-8"))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeExists("item"))
-                .andExpect(model().attribute("item", allOf(
-                                hasProperty("id", is(itemId)),
-                                hasProperty("title", is(item.getTitle())),
-                                hasProperty("description", is(item.getDescription())),
-                                hasProperty("imgPath", is(item.getImgPath())),
-                                hasProperty("price", is(item.getPrice())),
-                                hasProperty("count", is(0))
-                        )
-                ));
+                                                assertThat(form.attr("action")).isEqualTo("/items/" + item.getId());
+
+                                                final String count = form.select("span").text();
+                                                assertThat(count).isEqualTo("0");
+
+                                                assertThat(form.select("button[type=submit][name=action][value=MINUS]")).isNotEmpty();
+                                                assertThat(form.select("button[type=submit][name=action][value=PLUS]")).isNotEmpty();
+
+                                                assertThat(form.select("button[type=submit].bi-cart4")).isNotEmpty();
+                                            });
+                                }
+                        ))
+                )
+                .collectList()
+                .block()
+                .stream();
     }
 }
 

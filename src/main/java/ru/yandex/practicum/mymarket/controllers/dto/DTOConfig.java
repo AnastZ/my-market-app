@@ -15,17 +15,14 @@ import java.util.List;
 public class DTOConfig {
     @Bean
     public DTOConvertor<ItemDAO, ItemDTO> itemDTOConvertor() {
-        return item -> {
-            final Item i = item.getItem();
-            return new ItemDTO(i.getId(), i.getTitle(), i.getDescription(), i.getImgPath(), i.getPrice(), item.getCount());
+        return i -> {
+            return new ItemDTO(i.getId(), i.getTitle(), i.getDescription(), i.getImgPath(), i.getPrice(), i.getCount());
         };
     }
 
     @Bean
     public DTOConvertor<OrderItem, OrderItemDTO> orderItemDTOConvertor() {
-        return it -> {
-            return new OrderItemDTO(it.getItemId().getId(), it.getItemId().getTitle(), it.getPrice(), it.getCount());
-        };
+        return it -> new OrderItemDTO(it.getItemId(), it.getTitle(), it.getPrice(), it.getCount());
     }
 
     @Bean
@@ -42,8 +39,5 @@ public class DTOConfig {
             return new OrderDTO(order.getId(), items, totalSum);
         };
     }
-    @Bean
-    public DTOConvertor<CartItem, CartItem> cartItemDTOConvertor() {
 
-    }
 }

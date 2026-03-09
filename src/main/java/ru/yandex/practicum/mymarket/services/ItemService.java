@@ -26,7 +26,7 @@ import java.util.List;
 @Service
 public class ItemService {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final ItemRepository itemRepository;
     private final CartService cartService;
@@ -68,44 +68,52 @@ public class ItemService {
     public @NotNull Mono<List<List<ItemDTO>>> convertToNestedLists(@NotNull @NotEmpty final Flux<ItemDTO> items,
                                                                    @Min(1) final int nestedSize) {
 
-        return items.buffer(nestedSize)
-                .map(list -> {
-                    if (list.size() < nestedSize) {
-                        final List<ItemDTO> paddedList = new ArrayList<>(list);
-                        while (paddedList.size() < nestedSize) {
-                            paddedList.add(ItemDTO.ofSpecial());
-                        }
-                        return paddedList;
+        return items.collectList()
+                .flatMapMany(originalList -> {
+                    final int listSize = originalList.size();
+                    final int fullGroups = listSize / nestedSize;
+                    final int remainder = listSize % nestedSize;
+
+                    final List<List<ItemDTO>> result = new ArrayList<>();
+
+                    for (int i = 0; i < fullGroups; i++) {
+                        final int start = i * nestedSize;
+                        result.add(new ArrayList<>(
+                                originalList.subList(start, start + nestedSize)
+                        ));
                     }
-                    return list;
-                }).collectList();
+                    if (remainder > 0) {
+                        final List<ItemDTO> lastGroup = new ArrayList<>(
+                                originalList.subList(fullGroups * nestedSize, listSize)
+                        );
+                        while (lastGroup.size() < nestedSize) {
+                            lastGroup.add(ItemDTO.ofSpecial());
+                        }
+                        result.add(lastGroup);
+                    }
+                    return Flux.fromIterable(result);
+                })
+                .collectList();
     }
 
     /**
      * Получить страницу объектов из БД с сортировкой.
      *
-     * @param pageNumber номер страницы.
-     * @param pageSize   количество объектов на странице.
      * @param search     поисковой запрос (фильтрация по названию/описанию), если без фильтрации, то следует передать пустую строку, значение null неприемлимо.
      * @param sortMethod метод сортировки.
      * @return список объектов.
      */
-    private @NotNull Flux<ItemDAO> getAll(@Min(1) final int pageNumber,
-                                          @Min(1) final int pageSize,
-                                          @NotNull final String search,
+    private @NotNull Flux<ItemDAO> getAll(@NotNull final String search,
                                           @NotNull final ItemController.SortMethod sortMethod,
                                           @NotNull @NotBlank final String sessionId) {
 
-        final int skip = (pageNumber - 1) * pageSize;
         final Sort sort = switch (sortMethod) {
             case ALPHA -> Sort.by("title");
             case PRICE -> Sort.by("price");
             default -> Sort.unsorted();
         };
         return itemRepository
-                .findAllInCart(search, sessionId, sort)
-                .skip(skip)
-                .take(pageSize);
+                .findAllInCart(search, sessionId, sort);
 
     }
 
@@ -124,15 +132,35 @@ public class ItemService {
                                             @NotNull final String search,
                                             @NotNull final ItemController.SortMethod sortMethod,
                                             @NotNull @NotBlank final String sessionId) {
-        return getAll(pageNumber, pageSize, search, sortMethod, sessionId)
+        final int skip = (pageNumber - 1) * pageSize;
+        return getAll(search, sortMethod, sessionId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Товары не найдены.")))
-                .map(itemDTOConvertor::toDTO)
                 .collectList()
-                .flatMap(itemDAOList -> {
-                    final Paging paging = new Paging(pageNumber, pageSize, pageNumber != 1, itemDAOList.size() < pageSize);
-                    return convertToNestedLists(Flux.fromIterable(itemDAOList), listSize)
-                            .map(nested -> new ItemsDTO(nested, paging));
-                });
+                .flatMapMany(allItems -> {
+                    final int totalItems = allItems.size();
+                    final int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+
+                    if (pageNumber > totalPages && totalPages > 0) {
+                        return Flux.error(new NotFoundException("Страница не найдена."));
+                    }
+
+                    final Paging paging = new Paging(
+                            pageNumber,
+                            pageSize,
+                            pageNumber > 1,
+                            pageNumber < totalPages
+                    );
+                    return Flux.fromIterable(allItems)
+                            .skip(skip)
+                            .take(pageSize)
+                            .map(itemDTOConvertor::toDTO)
+                            .collectList()
+                            .flatMapMany(paginatedList ->
+                                    convertToNestedLists(Flux.fromIterable(paginatedList), listSize)
+                                            .map(nested -> new ItemsDTO(nested, paging))
+                            );
+                })
+                .next();
     }
 
     /**
@@ -147,16 +175,28 @@ public class ItemService {
                                     @NotNull @NotBlank final String sessionId) {
 
         return cartItemService.findByIdInCart(itemId, sessionId)
-                .switchIfEmpty(itemRepository.findById(itemId)
-                        .switchIfEmpty(notFound(itemId))
-                        .flatMap(item -> cartService.getOrCreateBySessionId(sessionId)
-                                .switchIfEmpty(Mono.error(new NotFoundException("Корзина не найдена.")))
-                                .flatMap(c -> cartItemService.save(new CartItem(c.getId(), item.getId(), item.getPrice())))))
                 .flatMap(item -> {
                     item.incrementCount();
                     return cartItemService.save(item);
                 })
-                .flatMap(t -> Mono.empty());
+                .switchIfEmpty(
+                        itemRepository.findById(itemId)
+                                .switchIfEmpty(notFound(itemId))
+                                .flatMap(item ->
+                                        cartService.getOrCreateBySessionId(sessionId)
+                                                .switchIfEmpty(Mono.error(new NotFoundException("Корзина не найдена.")))
+                                                .flatMap(c -> {
+                                                    final CartItem newCartItem = new CartItem(
+                                                            c.getId(),
+                                                            item.getId(),
+                                                            item.getTitle(),
+                                                            item.getPrice()
+                                                    );
+                                                    return Mono.defer(() -> cartItemService.save(newCartItem));
+                                                })
+                                )
+                )
+                .then();
     }
 
     /**
@@ -179,7 +219,7 @@ public class ItemService {
                     }
                     return cartItemService.save(c);
                 })
-                .flatMap(i -> Mono.empty());
+                .then();
     }
 
     /**

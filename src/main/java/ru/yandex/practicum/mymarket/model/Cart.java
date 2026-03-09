@@ -11,7 +11,6 @@ import java.util.Objects;
 
 public class Cart {
     @Id
-    @ReadOnlyProperty
     private Long id;
 
     private String sessionId;

@@ -52,10 +52,6 @@
             <version>1.22.1</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc-test</artifactId>
-        </dependency>
         <!-- Source: https://mvnrepository.com/artifact/io.projectreactor/reactor-test -->
         <dependency>
             <groupId>io.projectreactor</groupId>
@@ -97,11 +93,6 @@
             <artifactId>spring-boot-starter-data-r2dbc</artifactId>
             <scope>compile</scope>
         </dependency>
-
-
-
-
-
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

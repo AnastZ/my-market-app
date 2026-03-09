@@ -22,6 +22,7 @@ public class OrderController {
 
     /**
      * Получить все заказы.
+     *
      * @return представление "orders" с атрибутом модели "orders".
      */
     @GetMapping
@@ -33,7 +34,8 @@ public class OrderController {
 
     /**
      * Получить заказ по его уникальному номеру.
-     * @param orderId уникальный номер заказа.
+     *
+     * @param orderId  уникальный номер заказа.
      * @param newOrder является ли заказ новым.
      * @return представление "order" с атрибутомами модели: "order", "newOrder".
      */

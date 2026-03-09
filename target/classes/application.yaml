@@ -1,15 +1,19 @@
 spring:
   application:
-    name: my-market
-    r2dbc:
-      url: ${DB_URL:r2dbc:h2:mem:///market};DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-      username: ${DB_USER:sa}
-      password: ${DB_PASSWORD:sa}
-    sql:
-      init:
-        mode: always
-    codec:
-      max-in-memory-size: 20MB
+    name: market
+
+  r2dbc:
+    url: ${DB_URL:r2dbc:h2:mem:///market;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE}
+    username: ${DB_USER:sa}
+    password: ${DB_PASSWORD:password}
+    initialization-mode: always
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+
 item:
   image:
     path: classpath:images/

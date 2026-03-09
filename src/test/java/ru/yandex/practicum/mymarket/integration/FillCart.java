@@ -17,14 +17,14 @@ public interface FillCart extends FillItems{
                                   final ItemRepository itemRepository,
                                   final CartItemRepository cartItemRepository){
         final Random random = new Random();
-        final int min = 1;
-        final int max = 100;
-        final Supplier<Integer> count = ()->random.nextInt((max - min) + 1) + min;
+        final long min = 1;
+        final long max = 100;
+        final Supplier<Long> count = ()->random.nextLong((max - min) + 1L) + min;
         return cartRepository.save(new Cart(sessionId))
                 .flatMapMany(savedCart ->
                         fillItems(itemRepository)
                                 .map(savedItem -> {
-                                    return new CartItem(savedCart.getId(), savedItem.getId(), count.get(), savedItem.getPrice());
+                                    return new CartItem(savedCart.getId(), savedItem.getId(), savedItem.getTitle(), count.get(), savedItem.getPrice());
                                 })
                                 .collectList() // Собираем все CartItem в список
                                 .flatMapMany(cartItemRepository::saveAll) // Сохраняем все элементы корзины в БД

@@ -13,11 +13,19 @@ import ru.yandex.practicum.mymarket.model.CartItem;
 @Repository
 public interface CartItemRepository extends ReactiveCrudRepository<CartItem, Long> {
 
-    @Query("SELECT ct FROM CartItem ct WHERE ct.item.id = :item AND ct.cart.sessionId = :session")
+    @Query("""
+            SELECT * FROM Cart_Item ct 
+            LEFT JOIN cart c ON c.id = ct.cart_id
+            WHERE ct.item_id = :item AND c.session_Id = :session
+            """)
     Mono<CartItem> findByItemIdAndSessionId(@Param("item") Long itemId,
                                             @Param("session") String sessionId);
 
-    @Query("SELECT ct FROM CartItem ct WHERE ct.cart.sessionId = :session")
+    @Query("""
+            SELECT * FROM Cart_Item ct 
+            LEFT JOIN cart c ON c.id = ct.cart_id
+            WHERE ct.item_id = :item AND c.session_Id = :session
+            """)
     Flux<CartItem> getCartItems(@NotNull @NotBlank @Param("session") final String sessionId);
 
 }

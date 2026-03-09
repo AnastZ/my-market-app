@@ -10,7 +10,6 @@ import java.util.Objects;
 public class Item {
 
     @Id
-    @ReadOnlyProperty
     private Long id;
 
     private String title;
@@ -19,6 +18,7 @@ public class Item {
     private Long price;
     @Version
     private Long version;
+
     protected Item() {
     }
 

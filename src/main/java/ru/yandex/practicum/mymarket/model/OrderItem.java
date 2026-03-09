@@ -1,24 +1,27 @@
 package ru.yandex.practicum.mymarket.model;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.relational.core.mapping.Column;
 
 import java.util.Objects;
 
 
 public class OrderItem {
     @Id
-    @ReadOnlyProperty
     private Long id;
-
+    @NotNull
     private Long orderId;
-
+    @NotNull
     private Long itemId;
-
+    @NotNull
+    private String title;
+    @NotNull
+    @Column("PRICE_AT_ORDER")
     private Long price;
-
+    @Min(1)
     private int count;
     @Version
     private Long version;
@@ -30,16 +33,21 @@ public class OrderItem {
                      @NotNull final CartItem item) {
         this.orderId = orderId;
         this.itemId = item.getItemId();
+        this.title = item.getTitle();
         this.price = item.getOneItemPrice();
-        this.count = item.getCount();
+        this.count = Math.toIntExact(item.getCount());
     }
 
     public Long getId() {
         return id;
     }
 
-    public Item getItemId() {
+    public Long getItemId() {
         return itemId;
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     public Long getPrice() {
@@ -50,7 +58,7 @@ public class OrderItem {
         return count;
     }
 
-    public void setOrderId(Order orderId) {
+    public void setOrderId(Long orderId) {
         this.orderId = orderId;
     }
 

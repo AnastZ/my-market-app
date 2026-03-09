@@ -2,15 +2,11 @@ package ru.yandex.practicum.mymarket.controllers;
 
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.result.view.Rendering;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
-import ru.yandex.practicum.mymarket.controllers.dto.CartDTO;
 import ru.yandex.practicum.mymarket.services.CartService;
-
-import java.util.Objects;
 
 @Controller
 @RequestMapping("/cart/items")
