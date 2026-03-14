@@ -24,7 +24,7 @@ public interface CartItemRepository extends ReactiveCrudRepository<CartItem, Lon
     @Query("""
             SELECT * FROM Cart_Item ct 
             LEFT JOIN cart c ON c.id = ct.cart_id
-            WHERE ct.item_id = :item AND c.session_Id = :session
+            WHERE c.session_Id = :session
             """)
     Flux<CartItem> getCartItems(@NotNull @NotBlank @Param("session") final String sessionId);
 

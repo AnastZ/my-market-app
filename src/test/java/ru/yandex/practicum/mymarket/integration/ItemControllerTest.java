@@ -7,13 +7,16 @@ import org.jsoup.select.Elements;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mymarket.controllers.ItemController;
 import ru.yandex.practicum.mymarket.model.CartItem;
+import ru.yandex.practicum.mymarket.model.Item;
 import ru.yandex.practicum.mymarket.repositories.CartItemRepository;
 import ru.yandex.practicum.mymarket.repositories.ItemRepository;
 import ru.yandex.practicum.mymarket.services.ItemService;
@@ -23,6 +26,13 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ItemControllerTest extends AbstractController implements FillItems {
 
@@ -41,7 +51,7 @@ public class ItemControllerTest extends AbstractController implements FillItems 
                 .map(List::size)
                 .block()
                 .intValue();
-        if (count == 0) throw new IllegalArgumentException("No items found");
+        if (count == 0) throw new IllegalArgumentException("No items found.");
         return count;
     }
 
@@ -283,51 +293,49 @@ public class ItemControllerTest extends AbstractController implements FillItems 
                 .flatMap(item ->
                         Mono.just(DynamicTest.dynamicTest(
                                 "Get item with ID: " + item.getId(),
-                                () -> {
+                                () -> webTestClient.get()
+                                        .uri(path + "/" + item.getId())
+                                        .cookie("SESSION", sessionId)
+                                        .accept(MediaType.TEXT_HTML)
+                                        .exchange()
+                                        .expectStatus().isOk()
+                                        .expectHeader().contentType("text/html")
+                                        .expectBody()
+                                        .consumeWith(result -> {
+                                            final Document doc = Jsoup.parse(new String(result.getResponseBody(), StandardCharsets.UTF_8));
 
-                                    webTestClient.get()
-                                            .uri(path + "/" + item.getId())
-                                            .cookie("SESSION", sessionId)
-                                            .accept(MediaType.TEXT_HTML)
-                                            .exchange()
-                                            .expectStatus().isOk()
-                                            .expectHeader().contentType("text/html")
-                                            .expectBody()
-                                            .consumeWith(result -> {
-                                                final Document doc = Jsoup.parse(new String(result.getResponseBody(), StandardCharsets.UTF_8));
+                                            final Element card = doc.select("div.card").first();
+                                            assertThat(card).isNotNull();
 
-                                                final Element card = doc.select("div.card").first();
-                                                assertThat(card).isNotNull();
+                                            final String title = card.select("h5.card-title").text();
+                                            assertThat(title).isEqualTo(item.getTitle());
 
-                                                final String title = card.select("h5.card-title").text();
-                                                assertThat(title).isEqualTo(item.getTitle());
+                                            final String price = card.select("span.badge.text-bg-success").text();
+                                            assertThat(price).contains(item.getPrice().toString());
 
-                                                final String price = card.select("span.badge.text-bg-success").text();
-                                                assertThat(price).contains(item.getPrice().toString());
+                                            final String description = card.select("p.card-text").text();
+                                            assertThat(description).isEqualTo(item.getDescription());
 
-                                                final String description = card.select("p.card-text").text();
-                                                assertThat(description).isEqualTo(item.getDescription());
+                                            final Element form = card.select("form[method=post]").first();
+                                            assertThat(form).isNotNull();
 
-                                                final Element form = card.select("form[method=post]").first();
-                                                assertThat(form).isNotNull();
+                                            assertThat(form.attr("action")).isEqualTo("/items/" + item.getId());
 
-                                                assertThat(form.attr("action")).isEqualTo("/items/" + item.getId());
+                                            final String count = form.select("span").text();
+                                            assertThat(count).isEqualTo("0");
 
-                                                final String count = form.select("span").text();
-                                                assertThat(count).isEqualTo("0");
+                                            assertThat(form.select("button[type=submit][name=action][value=MINUS]")).isNotEmpty();
+                                            assertThat(form.select("button[type=submit][name=action][value=PLUS]")).isNotEmpty();
 
-                                                assertThat(form.select("button[type=submit][name=action][value=MINUS]")).isNotEmpty();
-                                                assertThat(form.select("button[type=submit][name=action][value=PLUS]")).isNotEmpty();
-
-                                                assertThat(form.select("button[type=submit].bi-cart4")).isNotEmpty();
-                                            });
-                                }
+                                            assertThat(form.select("button[type=submit].bi-cart4")).isNotEmpty();
+                                        })
                         ))
                 )
                 .collectList()
                 .block()
                 .stream();
     }
+
 }
 
 

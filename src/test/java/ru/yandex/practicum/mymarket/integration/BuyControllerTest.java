@@ -23,14 +23,15 @@ public class BuyControllerTest extends AbstractController implements FillCart {
     public void buy_success() throws Exception {
         fillDb(sessionId, cartRepository, itemRepository, cartItemRepository)
                 .collectList()
-                .then(Mono.fromRunnable(() -> {
-                    webTestClient.post()
-                            .uri("/buy")
-                            .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE)
-                            .cookie("SESSION", sessionId)
-                            .exchange()
-                            .expectStatus().is3xxRedirection()
-                            .expectHeader().valueMatches(HttpHeaders.LOCATION, ".*/orders/.*");
-                }));
+                .block();
+
+        webTestClient.post()
+                .uri("/buy")
+                .contentType(MediaType.TEXT_HTML)
+                .cookie("SESSION", sessionId)
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader()
+                .valueMatches(HttpHeaders.LOCATION, "orders/.*");
     }
 }
