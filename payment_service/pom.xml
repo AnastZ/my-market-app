@@ -45,7 +45,7 @@
                         <goals>
                             <goal>generate</goal>
                         </goals>
-                        <phase>generate-sources</phase> <!-- Привязываем к фазе generate-sources -->
+                        <phase>generate-sources</phase>
                         <configuration>
                             <inputSpec>${project.basedir}/src/main/resources/api-spec.yaml</inputSpec>
                             <generatorName>spring</generatorName>
