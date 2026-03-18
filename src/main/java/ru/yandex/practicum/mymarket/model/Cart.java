@@ -1,19 +1,21 @@
 package ru.yandex.practicum.mymarket.model;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.ReadOnlyProperty;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.relational.core.mapping.Column;
 
 import java.util.List;
 import java.util.Objects;
 
-@Entity
 public class Cart {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
     private String sessionId;
+    @Version
+    private Long version;
 
     protected Cart() {
     }

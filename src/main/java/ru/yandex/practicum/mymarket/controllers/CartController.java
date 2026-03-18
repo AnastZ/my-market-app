@@ -1,14 +1,12 @@
 package ru.yandex.practicum.mymarket.controllers;
 
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.mymarket.controllers.dto.CartDTO;
+import org.springframework.web.reactive.result.view.Rendering;
+import org.springframework.web.server.WebSession;
+import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mymarket.services.CartService;
-
-import java.util.Objects;
 
 @Controller
 @RequestMapping("/cart/items")
@@ -21,27 +19,25 @@ public class CartController {
     }
 
     @GetMapping
-    public String getCart(@NotNull final Model model,
-                          @NotNull final HttpSession session) {
-        final CartDTO cartDTO = cartService.getCartBySessionId(session.getId());
-        model.addAttribute("items", cartDTO.items());
-        model.addAttribute("total", cartDTO.total());
-        return "cart";
+    public Mono<Rendering> getCart(@NotNull final WebSession session) {
+        return cartService.getCartBySessionId(session.getId())
+                .map(cart -> Rendering.view("cart")
+                        .modelAttribute("items", cart.items())
+                        .modelAttribute("total", cart.total())
+                        .build());
     }
 
     @PostMapping
-    public String changeItem(@RequestParam("id") final Long itemId,
-                             @RequestParam(value = "action") final ItemController.CartItemAction action,
-                             @NotNull final Model model,
-                             @NotNull final HttpSession session) {
+    public Mono<Rendering> changeItem(@RequestParam("id") final Long itemId,
+                                      @RequestParam(value = "action") final ItemController.CartItemAction action,
+                                      @NotNull final WebSession session) {
 
-        if (Objects.nonNull(action)) {
-            switch (action) {
-                case PLUS -> cartService.incrementItem(itemId, session.getId());
-                case MINUS -> cartService.decrementItem(itemId, session.getId());
-            }
-        }
-        return getCart(model, session);
+        final Mono<Void> cartItemAction = switch (action) {
+            case PLUS -> cartService.incrementItem(itemId, session.getId());
+            case MINUS -> cartService.decrementItem(itemId, session.getId());
+            case null, default -> Mono.empty();
+        };
+        return cartItemAction.then(Mono.defer(() -> getCart(session)));
     }
 
 }

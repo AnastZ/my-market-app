@@ -1,45 +1,53 @@
 package ru.yandex.practicum.mymarket.model;
 
-import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.relational.core.mapping.Column;
 
 import java.util.Objects;
 
-@Entity
+
 public class OrderItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "item_id", nullable = false)
-    private Item item;
-
+    @NotNull
+    private Long orderId;
+    @NotNull
+    private Long itemId;
+    @NotNull
+    private String title;
+    @NotNull
+    @Column("PRICE_AT_ORDER")
     private Long price;
-
+    @Min(1)
     private int count;
+    @Version
+    private Long version;
 
     protected OrderItem() {
     }
 
-    public OrderItem(@NotNull final Item item,
-                     @NotNull final Long price,
-                     int count) {
-        this.item = item;
-        this.price = price;
-        this.count = count;
+    public OrderItem(@NotNull final Long orderId,
+                     @NotNull final CartItem item) {
+        this.orderId = orderId;
+        this.itemId = item.getItemId();
+        this.title = item.getTitle();
+        this.price = item.getOneItemPrice();
+        this.count = Math.toIntExact(item.getCount());
     }
 
     public Long getId() {
         return id;
     }
 
-    public Item getItem() {
-        return item;
+    public Long getItemId() {
+        return itemId;
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     public Long getPrice() {
@@ -50,27 +58,27 @@ public class OrderItem {
         return count;
     }
 
-    public void setOrder(Order order) {
-        this.order = order;
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         OrderItem orderItem = (OrderItem) o;
-        return count == orderItem.count && Objects.equals(id, orderItem.id) && Objects.equals(item, orderItem.item) && Objects.equals(price, orderItem.price);
+        return count == orderItem.count && Objects.equals(id, orderItem.id) && Objects.equals(itemId, orderItem.itemId) && Objects.equals(price, orderItem.price);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, item, price, count);
+        return Objects.hash(id, itemId, price, count);
     }
 
     @Override
     public String toString() {
         return "OrderItem{" +
                 "id=" + id +
-                ", item=" + item +
+                ", item=" + itemId +
                 ", price=" + price +
                 ", count=" + count +
                 '}';
