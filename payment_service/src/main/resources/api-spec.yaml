@@ -1,0 +1,62 @@
+openapi: 3.0.3
+info:
+  title: API сервиса платежей
+  version: 1.0.0
+paths:
+  /balance/{sessionId}:
+    get:
+      operationId: getBalance
+      summary: Получить баланс
+      tags:
+        - balance
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessBalance'
+
+  /payment/{sessionId}:
+    post:
+      operationId: payment
+      summary: Вычесть из баланса
+      tags:
+        - balance
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentValue'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessBalance'
+
+components:
+  parameters:
+    SessionId:
+      name: sessionId
+      in: path
+      description: Идентификатор сессии
+      required: true
+      schema:
+        $ref: '#/components/schemas/SessionId'
+
+  responses:
+    SuccessBalance:
+      description: Сумма баланса
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PaymentValue'
+
+  schemas:
+    PaymentValue:
+      description: Денежное значение
+      type: integer
+      format: int64
+      nullable: false
+    SessionId:
+      description: Идентификатор сессии
+      type: string
+      nullable: false
