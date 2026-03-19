@@ -13,8 +13,9 @@ import ru.ya.practicum.mymarket.model.Order;
 import ru.ya.practicum.mymarket.model.OrderItem;
 import ru.ya.practicum.mymarket.repositories.OrderItemRepository;
 import ru.ya.practicum.mymarket.repositories.OrderRepository;
+import ru.ya.practicum.payment.client.api.BalanceApi;
 
-import java.nio.file.NoSuchFileException;
+import javax.naming.ServiceUnavailableException;
 import java.util.List;
 
 @Service
@@ -24,15 +25,21 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final DTOConvertor<Order, OrderDTO> orderDTOConvertor;
     private final CartItemService cartItemService;
+    private final BalanceApi balanceApi;
+    private final PaymentServiceHealthChecker paymentServiceHealthChecker;
 
     public OrderService(@NotNull final OrderRepository orderRepository,
                         @NotNull final OrderItemRepository orderItemRepository,
                         @NotNull final DTOConvertor<Order, OrderDTO> orderDTOConvertor,
-                        @NotNull final CartItemService cartItemService) {
+                        @NotNull final CartItemService cartItemService,
+                        @NotNull final BalanceApi balanceApi,
+                        @NotNull final PaymentServiceHealthChecker paymentServiceHealthChecker) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.orderDTOConvertor = orderDTOConvertor;
         this.cartItemService = cartItemService;
+        this.balanceApi = balanceApi;
+        this.paymentServiceHealthChecker = paymentServiceHealthChecker;
     }
 
     private static <T> Mono<T> notFound(final Long id) {
@@ -88,13 +95,22 @@ public class OrderService {
 
     /**
      * Сохранить заказ. Из БД извлекаются объекты, помещённые в корзину,
-     * и создаётся заказ, напомленный ими.
+     * и создаётся заказ, наполненный ими.
      *
      * @param sessionId уникальный номер сессии.
      * @return источник данных с сохранённым заказом.
      */
     @Transactional
-    public @NotNull Mono<OrderDTO> save(@NotNull @NotBlank final String sessionId) {
+    public @NotNull Mono<OrderDTO> createOrder(@NotNull @NotBlank final String sessionId) {
+        paymentServiceHealthChecker.isHealthy()
+                .flatMap(healthy -> {
+                    if (healthy) {
+                        return balanceApi.getBalance(sessionId);
+                    } else {
+                        return Mono.error(new ServiceUnavailableException("Payment service is not available."));
+                    }
+                });
+
         return cartItemService.findItemsBySessionId(sessionId)
                 .collectList()
                 .switchIfEmpty(notFound())

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.ya.practicum.mymarket.model.NotFoundException;
 
+import javax.naming.ServiceUnavailableException;
 import java.nio.file.NoSuchFileException;
 
 
@@ -25,7 +26,7 @@ public class ControllerExceptionHandler {
         logger.error("Unexpected error: ", e);
     }
 
-    @ExceptionHandler({NoSuchFileException.class, NotFoundException.class})
+    @ExceptionHandler({NoSuchFileException.class, NotFoundException.class, ServiceUnavailableException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public void handleNoResultException(@NotNull final Exception e) {
         logger.error("Unexpected error: ", e);

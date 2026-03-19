@@ -11,6 +11,11 @@ import ru.ya.practicum.mymarket.controllers.dto.CartDTO;
 import ru.ya.practicum.mymarket.controllers.dto.ItemDTO;
 import ru.ya.practicum.mymarket.model.Cart;
 import ru.ya.practicum.mymarket.repositories.CartRepository;
+import ru.ya.practicum.payment.client.api.BalanceApi;
+
+import javax.naming.ServiceUnavailableException;
+import java.util.List;
+import java.util.function.Function;
 
 @Service
 public class CartService {
@@ -18,9 +23,15 @@ public class CartService {
 
     private final CartRepository cartRepository;
     private ItemService itemService;
+    private final BalanceApi balanceApi;
+    private final PaymentServiceHealthChecker paymentServiceHealthChecker;
 
-    public CartService(@NotNull final CartRepository cartRepository) {
+    public CartService(@NotNull final CartRepository cartRepository,
+                       @NotNull final BalanceApi balanceApi,
+                       @NotNull final PaymentServiceHealthChecker paymentServiceHealthChecker) {
         this.cartRepository = cartRepository;
+        this.balanceApi = balanceApi;
+        this.paymentServiceHealthChecker = paymentServiceHealthChecker;
     }
 
     public void setItemService(@NotNull final ItemService itemService) {
@@ -40,8 +51,28 @@ public class CartService {
                 .switchIfEmpty(Mono.defer(() -> cartRepository.save(new Cart(sessionId))));
     }
 
+    /**
+     * Получить объект корзины с товарами по уникальному номеру сессии.
+     * @param sessionId уникальный номер сессии.
+     * @return объект корзины с товарами
+     */
     @Transactional(readOnly = true)
     public Mono<CartDTO> getCartBySessionId(@NotNull final String sessionId) {
+        return paymentServiceHealthChecker.isHealthy()
+                .flatMap(healthy -> {
+                    if (healthy) {
+                        return balanceApi.getBalance(sessionId)
+                                .flatMap(balance->
+                                    loadCartsBySessionId(sessionId, t->t<=balance)
+                                );
+                    } else {
+                        log.error("Payment service is not available.");
+                        return loadCartsBySessionId(sessionId, t->false);
+                    }
+                });
+    }
+    private Mono<CartDTO> loadCartsBySessionId(@NotNull final String sessionId,
+                                                     final Function<Long, Boolean> successBuy) {
         return itemService.findAllInCart(sessionId)
                 .collectList()
                 .map(items -> {
@@ -49,7 +80,7 @@ public class CartService {
                             .map(ItemDTO::getPrice)
                             .reduce(Long::sum)
                             .orElse(0L);
-                    return new CartDTO(items, total);
+                    return new CartDTO(items, total, successBuy.apply(total));
                 });
     }
 

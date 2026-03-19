@@ -7,5 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record CartDTO(@NotNull List<ItemDTO> items,
-                      @NotNull @Min(0L) Long total) {
+                      @NotNull @Min(0L) Long total,
+                      boolean successBuy) {
 }

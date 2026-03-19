@@ -54,6 +54,75 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>${openapi-generator.version}</version>
+                <executions>
+                    <execution>
+                        <id>generate-payment-client</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+
+                            <inputSpec>${project.basedir}/src/main/resources/api-spec.yaml</inputSpec>
+
+                            <generatorName>java</generatorName>
+                            <library>webclient</library>
+
+                            <invokerPackage>ru.ya.practicum.payment.client</invokerPackage>
+                            <apiPackage>ru.ya.practicum.payment.client.api</apiPackage>
+                            <modelPackage>ru.ya.practicum.payment.client.model</modelPackage>
+
+                            <output>${project.build.directory}/generated-sources/payment-client</output>
+
+                            <configOptions>
+                                <security>false</security>
+                                <openApiNullable>false</openApiNullable>
+                                <useJakartaEe>true</useJakartaEe>
+                                <reactive>true</reactive>
+                                <useRxJava2>false</useRxJava2>
+                                <useRxJava3>false</useRxJava3>
+                                <dateLibrary>java8</dateLibrary>
+                                <java8>true</java8>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <useAbstractionForFiles>false</useAbstractionForFiles>
+                                <supportStreaming>false</supportStreaming>
+                                <generateClientAsBean>false</generateClientAsBean>
+                            </configOptions>
+
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
+                            <generateApiDocumentation>false</generateApiDocumentation>
+                            <generateModelDocumentation>false</generateModelDocumentation>
+                            <generateSupportingFiles>true</generateSupportingFiles>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>add-generated-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/payment-client/src/main/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>

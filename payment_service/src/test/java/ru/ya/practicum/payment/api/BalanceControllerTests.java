@@ -10,9 +10,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
-@AutoConfigureWebTestClient
-class BalanceControllerTests {
+class BalanceControllerTests extends AbstractTest{
 
     @Value("${balance.min}")
     private long min;
@@ -20,8 +18,7 @@ class BalanceControllerTests {
     @Value("${balance.max}")
     private long max;
 
-    @Autowired
-    private WebTestClient webTestClient;
+
 
     @Test
     void getBalance_success() {

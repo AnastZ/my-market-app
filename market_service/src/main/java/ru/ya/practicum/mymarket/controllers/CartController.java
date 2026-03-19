@@ -24,6 +24,7 @@ public class CartController {
                 .map(cart -> Rendering.view("cart")
                         .modelAttribute("items", cart.items())
                         .modelAttribute("total", cart.total())
+                        .modelAttribute("successBuy",  cart.successBuy())
                         .build());
     }
 

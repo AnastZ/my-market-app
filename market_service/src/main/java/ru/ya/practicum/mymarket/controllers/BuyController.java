@@ -29,7 +29,7 @@ public class BuyController {
     @PostMapping
     public Mono<Rendering> buy(@NotNull final WebSession session) {
 
-        return orderService.save(session.getId())
+        return orderService.createOrder(session.getId())
                 .map(order -> Rendering.redirectTo("orders/{id}")
                         .modelAttribute("id", order.id())
                         .modelAttribute("newOrder", true)

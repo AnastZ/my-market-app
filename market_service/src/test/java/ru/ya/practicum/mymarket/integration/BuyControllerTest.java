@@ -10,6 +10,9 @@ import ru.ya.practicum.mymarket.repositories.CartRepository;
 import ru.ya.practicum.mymarket.repositories.ItemRepository;
 
 public class BuyControllerTest extends AbstractController implements FillCart {
+
+    private MockWebServer mockWebServer;
+
     @Autowired
     private CartRepository cartRepository;
     @Autowired

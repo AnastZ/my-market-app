@@ -2,7 +2,6 @@ package ru.ya.practicum.mymarket.services;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.*;
-import javassist.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +15,7 @@ import ru.ya.practicum.mymarket.controllers.dto.DTOConvertor;
 import ru.ya.practicum.mymarket.controllers.dto.ItemDTO;
 import ru.ya.practicum.mymarket.model.CartItem;
 import ru.ya.practicum.mymarket.controllers.dto.ItemsDTO;
+import ru.ya.practicum.mymarket.model.NotFoundException;
 import ru.ya.practicum.mymarket.model.Paging;
 import ru.ya.practicum.mymarket.repositories.ItemRepository;
 import ru.ya.practicum.mymarket.repositories.dao.ItemDAO;

@@ -16,7 +16,10 @@
     <description>payment_service</description>
 
     <dependencies>
-
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -31,7 +34,7 @@
                 <artifactId>openapi-generator-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>generate-api</id>
+                        <id>generate-payment-service</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
