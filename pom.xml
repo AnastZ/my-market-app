@@ -6,108 +6,106 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>4.0.3</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/>
     </parent>
-	<groupId>ru.ya.practicum</groupId>
-	<artifactId>my-market-app</artifactId>
-	<version>0.0.3</version>
-	<name>my-market-app</name>
-	<description>My Market Application</description>
+    <groupId>ru.ya.practicum</groupId>
+    <artifactId>my-market-app</artifactId>
+    <version>0.0.3</version>
+    <packaging>pom</packaging>
+    <name>my-market-app</name>
+    <description>My Market Application</description>
 
-	<properties>
-		<java.version>21</java.version>
-	</properties>
-	<dependencies>
+    <modules>
+        <module>market_service</module>
+        <module>payment_service</module>
+    </modules>
 
-        <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test -->
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Общие версии зависимостей -->
+        <openapi-generator.version>7.20.0</openapi-generator.version>
+        <build-helper.version>3.6.0</build-helper.version>
+        <springdoc.version>2.3.0</springdoc.version>
+    </properties>
+
+    <!-- Общие зависимости для всех модулей -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Здесь можно управлять версиями общих зависимостей -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+        </dependency>
+
+
+
+
+        <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>4.0.3</version>
             <scope>test</scope>
         </dependency>
         <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-webtestclient -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-webtestclient</artifactId>
-            <version>4.0.3</version>
             <scope>test</scope>
         </dependency>
-        <!-- Source: https://mvnrepository.com/artifact/org.jsoup/jsoup -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>1.22.1</version>
             <scope>test</scope>
         </dependency>
-        <!-- Source: https://mvnrepository.com/artifact/io.projectreactor/reactor-test -->
-        <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-test</artifactId>
-            <version>3.8.3</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>2.4.240</version>
-        </dependency>
-        <!-- Source: https://mvnrepository.com/artifact/io.r2dbc/r2dbc-h2 -->
-        <dependency>
-            <groupId>io.r2dbc</groupId>
-            <artifactId>r2dbc-h2</artifactId>
-            <version>1.1.0.RELEASE</version>
-        </dependency>
-
-
-
-        <!-- Source: https://mvnrepository.com/artifact/io.spring.dependency-management/io.spring.dependency-management.gradle.plugin -->
-        <dependency>
-            <groupId>io.spring.dependency-management</groupId>
-            <artifactId>io.spring.dependency-management.gradle.plugin</artifactId>
-            <version>1.1.7</version>
-            <type>pom</type>
-            <scope>runtime</scope>
-        </dependency>
-        <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-webflux -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-r2dbc -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-r2dbc</artifactId>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-thymeleaf</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.thymeleaf</groupId>
-            <artifactId>thymeleaf-spring6</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.thymeleaf</groupId>
-            <artifactId>thymeleaf</artifactId>
-        </dependency>
-        <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-validation -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 
-	<build>
-		<plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-		</plugins>
-	</build>
+    <!-- Общая конфигурация сборки для всех модулей -->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
+                <plugin>
+                    <groupId>org.openapitools</groupId>
+                    <artifactId>openapi-generator-maven-plugin</artifactId>
+                    <version>${openapi-generator.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>${build-helper.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>

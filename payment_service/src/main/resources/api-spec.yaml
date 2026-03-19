@@ -24,6 +24,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/SessionId'
       requestBody:
+        required: true
         content:
           application/json:
             schema:

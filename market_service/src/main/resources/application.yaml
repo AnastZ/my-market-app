@@ -14,6 +14,12 @@ spring:
       schema-locations: classpath:schema.sql
       data-locations: classpath:data.sql
 
+server:
+  port: ${MARKET_PORT:8084}
+
+payment-service:
+  url: ${PAYMENT_URL:http://localhost:8085}
+
 item:
   image:
     path: classpath:images/

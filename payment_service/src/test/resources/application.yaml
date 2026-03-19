@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: payment_service
+
+balance:
+  min: 100
+  max: 1_000_000

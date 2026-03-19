@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: payment_service
+
+server:
+  port: ${PAYMENT_PORT:8085}
+
+balance:
+  min: 100
+  max: 1_000_000
