@@ -5,7 +5,7 @@ import jakarta.validation.constraints.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Sort;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -34,17 +34,21 @@ public class ItemService {
 
     private final int listSize;
     private final DTOConvertor<ItemDAO, ItemDTO> itemDTOConvertor;
+    private final ItemCacheService itemCacheService;
+
 
     public ItemService(@NotNull final ItemRepository itemRepository,
                        @NotNull final CartService cartService,
                        @NotNull final CartItemService cartItemService,
                        @Value("${item.list-size}") @NotNull final int listSize,
-                       @NotNull final DTOConvertor<ItemDAO, ItemDTO> itemDTOConvertor) {
+                       @NotNull final DTOConvertor<ItemDAO, ItemDTO> itemDTOConvertor,
+                       @NotNull final ItemCacheService itemCacheService) {
         this.itemRepository = itemRepository;
         this.cartService = cartService;
         this.cartItemService = cartItemService;
         this.listSize = listSize;
         this.itemDTOConvertor = itemDTOConvertor;
+        this.itemCacheService = itemCacheService;
     }
 
     @PostConstruct
@@ -97,27 +101,6 @@ public class ItemService {
     }
 
     /**
-     * Получить страницу объектов из БД с сортировкой.
-     *
-     * @param search     поисковой запрос (фильтрация по названию/описанию), если без фильтрации, то следует передать пустую строку, значение null неприемлимо.
-     * @param sortMethod метод сортировки.
-     * @return список объектов.
-     */
-    private @NotNull Flux<ItemDAO> getAll(@NotNull final String search,
-                                          @NotNull final ItemController.SortMethod sortMethod,
-                                          @NotNull @NotBlank final String sessionId) {
-
-        final Sort sort = switch (sortMethod) {
-            case ALPHA -> Sort.by("title");
-            case PRICE -> Sort.by("price");
-            default -> Sort.unsorted();
-        };
-        return itemRepository
-                .findAllInCart(search, sessionId, sort);
-
-    }
-
-    /**
      * Получить объекты из БД.
      *
      * @param pageNumber номер страницы.
@@ -133,7 +116,7 @@ public class ItemService {
                                             @NotNull final ItemController.SortMethod sortMethod,
                                             @NotNull @NotBlank final String sessionId) {
         final int skip = (pageNumber - 1) * pageSize;
-        return getAll(search, sortMethod, sessionId)
+        return itemCacheService.getAllCached(search, sortMethod, sessionId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Товары не найдены.")))
                 .collectList()
                 .flatMapMany(allItems -> {
@@ -170,6 +153,7 @@ public class ItemService {
      * @param sessionId уникальный номер сессии.
      * @return пустой источник данных.
      */
+    @CacheEvict(value = "items", allEntries = true)
     @Transactional
     public Mono<Void> incrementItem(@NotNull final Long itemId,
                                     @NotNull @NotBlank final String sessionId) {
@@ -196,7 +180,7 @@ public class ItemService {
                                                 })
                                 )
                 )
-                .then();
+                .then(itemCacheService.evictItemsCache());
     }
 
     /**
@@ -206,6 +190,7 @@ public class ItemService {
      * @param itemId    уникальный номер товара.
      * @param sessionId уникальный номер сессии.
      */
+    @CacheEvict(value = "items", allEntries = true)
     @Transactional
     public Mono<Void> decrementItem(@NotNull final Long itemId,
                                     @NotNull @NotBlank final String sessionId) {
@@ -219,7 +204,7 @@ public class ItemService {
                     }
                     return cartItemService.save(c);
                 })
-                .then();
+                .then(itemCacheService.evictItemsCache());
     }
 
     /**
@@ -249,17 +234,3 @@ public class ItemService {
                 .map(itemDTOConvertor::toDTO);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -9,7 +9,7 @@ import org.springframework.http.MediaType;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class OrderControllerTest extends AbstractController implements FillItems {
+public class OrderControllerTest extends AbstractTest implements FillItems {
 
     private final String path = "/orders";
 

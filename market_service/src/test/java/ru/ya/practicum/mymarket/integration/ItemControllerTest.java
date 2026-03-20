@@ -7,12 +7,12 @@ import org.jsoup.select.Elements;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpSession;
 import reactor.core.publisher.Mono;
 import ru.ya.practicum.mymarket.controllers.ItemController;
 import ru.ya.practicum.mymarket.model.CartItem;
@@ -25,17 +25,13 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+public class ItemControllerTest extends AbstractTest implements FillItems {
 
-public class ItemControllerTest extends AbstractController implements FillItems {
-
-    private final String path = "/items";
+    static final String path = "/items";
 
     @Autowired
     private ItemRepository itemRepository;
@@ -45,7 +41,7 @@ public class ItemControllerTest extends AbstractController implements FillItems 
 
 
     private int getCountItems() throws IllegalArgumentException {
-        final int count = itemRepository.findAllInCart("", "", Sort.unsorted())
+        final int count = itemRepository.findAllWithCart("", "", Sort.unsorted())
                 .collectList()
                 .map(List::size)
                 .block()
@@ -136,7 +132,6 @@ public class ItemControllerTest extends AbstractController implements FillItems 
                 .expectHeader().contentType("text/html")
                 .expectBody()
                 .consumeWith(result -> {
-
                     final Document doc = Jsoup.parse(new String(result.getResponseBody(), StandardCharsets.UTF_8));
                     checkItems(doc, defSize, defNumber, countPages, ItemController.SortMethod.NO);
                 });
@@ -334,6 +329,7 @@ public class ItemControllerTest extends AbstractController implements FillItems 
                 .block()
                 .stream();
     }
+
 
 }
 

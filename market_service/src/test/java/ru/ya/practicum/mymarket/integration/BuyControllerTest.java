@@ -1,32 +1,31 @@
 package ru.ya.practicum.mymarket.integration;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Mono;
-import ru.ya.practicum.mymarket.repositories.CartItemRepository;
-import ru.ya.practicum.mymarket.repositories.CartRepository;
-import ru.ya.practicum.mymarket.repositories.ItemRepository;
+import ru.ya.practicum.mymarket.controllers.dto.OrderDTO;
+import ru.ya.practicum.mymarket.services.OrderService;
 
-public class BuyControllerTest extends AbstractController implements FillCart {
+import java.util.Collections;
 
-    private MockWebServer mockWebServer;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
-    @Autowired
-    private CartRepository cartRepository;
-    @Autowired
-    private ItemRepository itemRepository;
-    @Autowired
-    private CartItemRepository cartItemRepository;
 
-    private final String path = "/buy";
+public class BuyControllerTest extends AbstractTest implements FillCart {
+
+    @MockitoBean
+    private OrderService orderService;
 
     @Test
     public void buy_success() throws Exception {
-        fillDb(sessionId, cartRepository, itemRepository, cartItemRepository)
-                .collectList()
-                .block();
+
+        final OrderDTO orderDTO = new OrderDTO(1L, Collections.emptyList(), 100L);
+
+        when(orderService.createOrder(anyString()))
+                .thenReturn(Mono.just(orderDTO));
 
         webTestClient.post()
                 .uri("/buy")

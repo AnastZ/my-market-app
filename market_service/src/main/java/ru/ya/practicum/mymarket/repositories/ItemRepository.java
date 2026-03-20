@@ -6,7 +6,6 @@ import org.springframework.data.domain.*;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
-import org.springframework.data.repository.reactive.ReactiveSortingRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,9 +27,9 @@ public interface ItemRepository extends ReactiveCrudRepository<Item, Long> {
                 WHERE (LOWER(i.title) LIKE LOWER(CONCAT('%', :search, '%'))
                 OR LOWER(i.description) LIKE LOWER(CONCAT('%', :search, '%')))
             """)
-    Flux<ItemDAO> findAllInCart(@NotNull String search,
-                                @NotNull @NotBlank String sessionId,
-                                @NotNull Sort sort);
+    Flux<ItemDAO> findAllWithCart(@NotNull String search,
+                                  @NotNull @NotBlank String sessionId,
+                                  @NotNull Sort sort);
 
     @Query("""
             SELECT i.id, i.title, i.description, i.img_path as imgPath, i.price, 

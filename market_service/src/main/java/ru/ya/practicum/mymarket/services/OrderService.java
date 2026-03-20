@@ -2,6 +2,8 @@ package ru.ya.practicum.mymarket.services;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -20,6 +22,8 @@ import java.util.List;
 
 @Service
 public class OrderService {
+
+    private final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
@@ -102,30 +106,49 @@ public class OrderService {
      */
     @Transactional
     public @NotNull Mono<OrderDTO> createOrder(@NotNull @NotBlank final String sessionId) {
-        paymentServiceHealthChecker.isHealthy()
+        return paymentServiceHealthChecker.isHealthy()
                 .flatMap(healthy -> {
-                    if (healthy) {
-                        return balanceApi.getBalance(sessionId);
-                    } else {
+                    if (!healthy)
                         return Mono.error(new ServiceUnavailableException("Payment service is not available."));
-                    }
-                });
 
-        return cartItemService.findItemsBySessionId(sessionId)
-                .collectList()
-                .switchIfEmpty(notFound())
-                .flatMap(items -> orderRepository.save(new Order())
-                        .flatMap(order -> {
-                            final List<OrderItem> orderItems = items.stream()
-                                    .map(item -> new OrderItem(order.getId(), item))
-                                    .toList();
-                            return orderItemRepository.saveAll(orderItems)
-                                    .collectList()
-                                    .map(savedItems -> {
-                                        order.setOrderItems(savedItems);
-                                        return order;
-                                    });
-                        }))
-                .map(orderDTOConvertor::toDTO);
+                    return cartItemService.findItemsBySessionId(sessionId)
+                            .collectList()
+                            .switchIfEmpty(notFound())
+                            .flatMap(items -> orderRepository.save(new Order())
+                                    .flatMap(order -> {
+                                        final List<OrderItem> orderItems = items.stream()
+                                                .map(item -> new OrderItem(order.getId(), item))
+                                                .toList();
+                                        return orderItemRepository.saveAll(orderItems)
+                                                .collectList()
+                                                .map(savedItems -> {
+                                                    order.setOrderItems(savedItems);
+                                                    return order;
+                                                });
+                                    }))
+                            .flatMap(order -> {
+                                final OrderDTO orderDTO = orderDTOConvertor.toDTO(order);
+
+                                return balanceApi.payment(sessionId, orderDTO.getTotalSum())
+                                        .flatMap(balance -> {
+                                            if (balance >= 0) {
+                                                return Mono.just(orderDTO);
+                                            } else {
+                                                return Mono.error(new PaymentError(
+                                                        String.format("Insufficient funds. Balance: %d, Required: %d",
+                                                                balance, orderDTO.getTotalSum())));
+                                            }
+                                        })
+                                        .onErrorResume(e -> Mono.error(new PaymentError(
+                                                "Payment failed: " + e.getMessage())));
+                            });
+                }).onErrorResume(ServiceUnavailableException.class, e -> {
+                    log.error("Payment service unavailable: {}", e.getMessage());
+                    return Mono.error(e);
+                })
+                .onErrorResume(PaymentError.class, e -> {
+                    log.error("Payment failed for session {}: {}", sessionId, e.getMessage());
+                    return Mono.error(e);
+                });
     }
 }

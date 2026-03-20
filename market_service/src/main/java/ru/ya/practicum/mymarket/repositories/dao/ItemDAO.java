@@ -1,13 +1,18 @@
 package ru.ya.practicum.mymarket.repositories.dao;
 
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.redis.core.RedisHash;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * Класс для загрузки данных о количестве товара в корзине.
  */
-public class ItemDAO {
+
+public class ItemDAO implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private Long id;
 
     private String title;

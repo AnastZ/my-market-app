@@ -53,6 +53,7 @@ public class CartService {
 
     /**
      * Получить объект корзины с товарами по уникальному номеру сессии.
+     *
      * @param sessionId уникальный номер сессии.
      * @return объект корзины с товарами
      */
@@ -62,17 +63,16 @@ public class CartService {
                 .flatMap(healthy -> {
                     if (healthy) {
                         return balanceApi.getBalance(sessionId)
-                                .flatMap(balance->
-                                    loadCartsBySessionId(sessionId, t->t<=balance)
-                                );
+                                .flatMap(balance -> loadCartsBySessionId(sessionId, t -> t <= balance));
                     } else {
                         log.error("Payment service is not available.");
-                        return loadCartsBySessionId(sessionId, t->false);
+                        return loadCartsBySessionId(sessionId, t -> false);
                     }
                 });
     }
+
     private Mono<CartDTO> loadCartsBySessionId(@NotNull final String sessionId,
-                                                     final Function<Long, Boolean> successBuy) {
+                                               final Function<Long, Boolean> successBuy) {
         return itemService.findAllInCart(sessionId)
                 .collectList()
                 .map(items -> {

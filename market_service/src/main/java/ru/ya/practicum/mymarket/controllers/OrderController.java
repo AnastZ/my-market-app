@@ -26,7 +26,7 @@ public class OrderController {
      * @return представление "orders" с атрибутом модели "orders".
      */
     @GetMapping
-    public Mono<Rendering> orders() {
+    public Mono<Rendering> getOrders() {
         return Mono.just(Rendering.view("orders")
                 .modelAttribute("orders", orderService.findAll())
                 .build());
