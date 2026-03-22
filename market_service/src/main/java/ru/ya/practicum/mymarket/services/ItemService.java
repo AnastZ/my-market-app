@@ -146,14 +146,7 @@ public class ItemService {
                 .next();
     }
 
-    /**
-     * Увеличить количество товара в корзине.
-     *
-     * @param itemId    уникальный номер товара.
-     * @param sessionId уникальный номер сессии.
-     * @return пустой источник данных.
-     */
-    @CacheEvict(value = "items", allEntries = true)
+
     @Transactional
     public Mono<Void> incrementItem(@NotNull final Long itemId,
                                     @NotNull @NotBlank final String sessionId) {
@@ -190,7 +183,7 @@ public class ItemService {
      * @param itemId    уникальный номер товара.
      * @param sessionId уникальный номер сессии.
      */
-    @CacheEvict(value = "items", allEntries = true)
+
     @Transactional
     public Mono<Void> decrementItem(@NotNull final Long itemId,
                                     @NotNull @NotBlank final String sessionId) {
@@ -218,7 +211,7 @@ public class ItemService {
     public Mono<ItemDTO> findItemInCart(@NotNull final Long itemId,
                                         @NotNull @NotBlank final String sessionId) {
 
-        return itemRepository.findByIdAndSessionId(itemId, sessionId)
+        return itemCacheService.getById(itemId, sessionId)
                 .switchIfEmpty(notFound(itemId))
                 .map(itemDTOConvertor::toDTO);
     }
@@ -230,7 +223,7 @@ public class ItemService {
      * @return объекты в корзине.
      */
     public Flux<ItemDTO> findAllInCart(@NotNull final String sessionId) {
-        return itemRepository.findAllInCart(sessionId)
+        return itemCacheService.getAllCached(sessionId)
                 .map(itemDTOConvertor::toDTO);
     }
 }

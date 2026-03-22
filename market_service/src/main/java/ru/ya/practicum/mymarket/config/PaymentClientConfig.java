@@ -17,7 +17,6 @@ public class PaymentClientConfig {
                 .baseUrl(paymentServiceUrl)
                 .build();
     }
-
     @Bean
     public ApiClient paymentApiClient(@NotNull final WebClient paymentWebClient) {
         return new ApiClient(paymentWebClient);

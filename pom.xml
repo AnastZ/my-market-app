@@ -40,6 +40,7 @@
                 <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
                 <version>${springdoc.version}</version>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
 

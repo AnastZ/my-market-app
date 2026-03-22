@@ -13,8 +13,6 @@ import ru.ya.practicum.mymarket.model.Cart;
 import ru.ya.practicum.mymarket.repositories.CartRepository;
 import ru.ya.practicum.payment.client.api.BalanceApi;
 
-import javax.naming.ServiceUnavailableException;
-import java.util.List;
 import java.util.function.Function;
 
 @Service
@@ -63,16 +61,16 @@ public class CartService {
                 .flatMap(healthy -> {
                     if (healthy) {
                         return balanceApi.getBalance(sessionId)
-                                .flatMap(balance -> loadCartsBySessionId(sessionId, t -> t <= balance));
+                                .flatMap(balance -> loadCartBySessionId(sessionId, t -> t <= balance));
                     } else {
                         log.error("Payment service is not available.");
-                        return loadCartsBySessionId(sessionId, t -> false);
+                        return loadCartBySessionId(sessionId, t -> false);
                     }
                 });
     }
 
-    private Mono<CartDTO> loadCartsBySessionId(@NotNull final String sessionId,
-                                               final Function<Long, Boolean> successBuy) {
+    private Mono<CartDTO> loadCartBySessionId(@NotNull final String sessionId,
+                                              final Function<Long, Boolean> successBuy) {
         return itemService.findAllInCart(sessionId)
                 .collectList()
                 .map(items -> {

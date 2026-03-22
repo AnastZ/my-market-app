@@ -14,7 +14,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 
-public class BuyControllerTest extends AbstractTest implements FillCart {
+public class BuyControllerTest extends AbstractTestWithRedis{
 
     @MockitoBean
     private OrderService orderService;

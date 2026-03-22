@@ -10,7 +10,6 @@ import java.util.UUID;
 
 @SpringBootTest
 @AutoConfigureWebTestClient
-
 public abstract class AbstractTest {
     @Autowired
     protected WebTestClient webTestClient;

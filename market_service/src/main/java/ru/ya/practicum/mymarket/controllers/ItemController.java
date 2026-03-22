@@ -36,8 +36,7 @@ public class ItemController {
      * @return html Thymeleaf шаблон.
      */
     @GetMapping
-    public Mono<Rendering> getItems(@NotNull final Model model,
-                                    @NotNull @CookieValue("SESSION") final String session,
+    public Mono<Rendering> getItems(@NotNull @CookieValue("SESSION") final String session,
                                     @RequestParam(value = "search", required = false, defaultValue = "") final String search,
                                     @RequestParam(value = "sort", required = false, defaultValue = "NO") @NotNull final SortMethod sort,
                                     @RequestParam(value = "pageNumber", required = false, defaultValue = "1") final int pageNumber,

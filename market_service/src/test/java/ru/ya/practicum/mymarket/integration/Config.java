@@ -1,5 +1,7 @@
 package ru.ya.practicum.mymarket.integration;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.validation.constraints.NotNull;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -20,7 +22,6 @@ import ru.ya.practicum.mymarket.services.PaymentServiceHealthChecker;
 import ru.ya.practicum.payment.client.api.BalanceApi;
 
 @TestConfiguration
-
 public class Config {
 
     @Bean
@@ -29,23 +30,23 @@ public class Config {
         return new BalanceApi() {
             @Override
             public Mono<Long> getBalance(String sessionId) {
-                return Mono.just(10000L); // Всегда возвращаем 10000
+                return Mono.just(100_000_000L);
             }
 
             @Override
             public Mono<Long> payment(String sessionId, Long body) {
-                return Mono.just(10000L - body); // Всегда успешный платёж
+                return Mono.just(1_000L);
             }
         };
     }
 
     @Bean
     @Primary
-    public PaymentServiceHealthChecker mockHealthChecker(WebClient webClient) {
+    public PaymentServiceHealthChecker mockHealthChecker(@NotNull final WebClient webClient) {
         return new PaymentServiceHealthChecker(webClient) {
             @Override
-            public Mono<Boolean> isHealthy() {
-                return Mono.just(true); // Всегда здоров
+            public @NotNull Mono<Boolean> isHealthy() {
+                return Mono.just(true);
             }
         };
     }

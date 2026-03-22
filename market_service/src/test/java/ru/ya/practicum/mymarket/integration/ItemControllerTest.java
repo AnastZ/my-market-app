@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 import ru.ya.practicum.mymarket.controllers.ItemController;
 import ru.ya.practicum.mymarket.model.CartItem;
 import ru.ya.practicum.mymarket.repositories.CartItemRepository;
+import ru.ya.practicum.mymarket.repositories.CartRepository;
 import ru.ya.practicum.mymarket.repositories.ItemRepository;
 import ru.ya.practicum.mymarket.services.ItemService;
 
@@ -29,16 +30,26 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-public class ItemControllerTest extends AbstractTest implements FillItems {
+
+public class ItemControllerTest extends AbstractTestWithRedis implements FillCart {
 
     static final String path = "/items";
 
     @Autowired
     private ItemRepository itemRepository;
+    @Autowired
+    private CartRepository cartRepository;
+    @Autowired
+    private CartItemRepository cartItemRepository;
 
     @Value("${item.list-size}")
     private int itemListSize;
 
+    @Override
+    void setUp() {
+        super.setUp();
+        FillCart.super.fillDb(sessionId, cartRepository, itemRepository, cartItemRepository);
+    }
 
     private int getCountItems() throws IllegalArgumentException {
         final int count = itemRepository.findAllWithCart("", "", Sort.unsorted())
@@ -190,8 +201,7 @@ public class ItemControllerTest extends AbstractTest implements FillItems {
     }
 
 
-    @Autowired
-    private CartItemRepository cartItemRepository;
+
 
     @Autowired
     private ItemService itemService;

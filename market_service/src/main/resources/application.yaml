@@ -21,11 +21,7 @@ spring:
       timeout: 2s
       lettuce:
           pool:
-            enabled: true
-            max-active: 8
-            max-idle: 8
-            min-idle: 0
-            max-wait: -1ms
+            enabled: false
 
 server:
   port: ${MARKET_PORT:8084}

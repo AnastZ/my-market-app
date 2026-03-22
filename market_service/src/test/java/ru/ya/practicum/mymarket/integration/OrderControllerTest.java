@@ -5,11 +5,13 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
-public class OrderControllerTest extends AbstractTest implements FillItems {
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+public class OrderControllerTest extends AbstractTestWithRedis {
 
     private final String path = "/orders";
 
@@ -39,6 +41,7 @@ public class OrderControllerTest extends AbstractTest implements FillItems {
                     assertThat(items).isNotEmpty();
 
                     final Element firstItem = items.first();
+                    assertNotNull(firstItem);
                     final String itemText = firstItem.text();
                     assertThat(itemText).containsPattern(".+ \\(\\d+ шт\\.\\).+ руб\\.");
 

@@ -21,6 +21,13 @@ spring:
     redis:
       repositories:
         enabled: false
+      timeout: 5s
+      lettuce:
+        pool:
+            max-active: 8
+            max-idle: 8
+            min-idle: 0
+        shutdown-timeout: 100ms
 
 
 server:
@@ -33,4 +40,3 @@ item:
   image:
     path: classpath:images/
   list-size: 3
-
