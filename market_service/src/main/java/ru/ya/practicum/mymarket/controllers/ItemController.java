@@ -6,6 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.result.view.Rendering;
 import reactor.core.publisher.Mono;
+import ru.ya.practicum.mymarket.model.SortMethod;
 import ru.ya.practicum.mymarket.services.ItemService;
 
 import java.util.Objects;
@@ -20,14 +21,10 @@ public class ItemController {
         this.itemService = itemService;
     }
 
-    public enum SortMethod {
-        NO, ALPHA, PRICE;
-    }
 
     /**
      * Получить объекты на заданной странице.
      *
-     * @param model      модель данных.
      * @param session    сессия.
      * @param search     поисковой запрос (фильтрация по названию или описанию).
      * @param sort       метод сортировки.

@@ -15,7 +15,12 @@ spring:
       data-locations: classpath:data.sql
 
   cache:
-    type: simple
+    type: redis
+    redis:
+      time-to-live: 600000
+      cache-null-values: false
+      key-prefix: ""
+      use-key-prefix: true
 
   data:
     redis:

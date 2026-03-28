@@ -9,12 +9,14 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 import ru.ya.practicum.payment.client.ApiClient;
 import ru.ya.practicum.payment.client.api.BalanceApi;
 
+import java.nio.file.Paths;
 import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,7 +28,8 @@ public class PaymentServiceTest{
 
     @Container
     private static final GenericContainer<?> paymentContainer = new GenericContainer<>(
-            DockerImageName.parse("payment_service:0.0.1"))
+
+            DockerImageName.parse("my-market-app-payment_service"))
             .withExposedPorts(paymentPort)
             .waitingFor(Wait.forHttp("/actuator/health")
                     .forStatusCode(200)

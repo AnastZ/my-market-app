@@ -1,7 +1,6 @@
-package ru.ya.practicum.mymarket.repositories.dao;
+package ru.ya.practicum.mymarket.model;
 
-import jakarta.validation.constraints.NotNull;
-import org.springframework.data.redis.core.RedisHash;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -9,8 +8,8 @@ import java.util.Objects;
 /**
  * Класс для загрузки данных о количестве товара в корзине.
  */
-
-public class ItemDAO implements Serializable {
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
+public class ItemWithCartCount implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Long id;
@@ -19,14 +18,18 @@ public class ItemDAO implements Serializable {
     private String description;
     private String imgPath;
     private Long price;
-    private final int count;
+    private int count;
 
-    public ItemDAO(Long id,
-                   String title,
-                   String description,
-                   String imgPath,
-                   Long price,
-                   int count) {
+    protected ItemWithCartCount() {
+
+    }
+
+    public ItemWithCartCount(Long id,
+                             String title,
+                             String description,
+                             String imgPath,
+                             Long price,
+                             int count) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -39,31 +42,55 @@ public class ItemDAO implements Serializable {
         return id;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getTitle() {
         return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getDescription() {
         return description;
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public String getImgPath() {
         return imgPath;
+    }
+
+    public void setImgPath(String imgPath) {
+        this.imgPath = imgPath;
     }
 
     public Long getPrice() {
         return price;
     }
 
+    public void setPrice(Long price) {
+        this.price = price;
+    }
+
     public int getCount() {
         return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        ItemDAO itemDAO = (ItemDAO) o;
-        return count == itemDAO.count && Objects.equals(id, itemDAO.id) && Objects.equals(title, itemDAO.title) && Objects.equals(description, itemDAO.description) && Objects.equals(imgPath, itemDAO.imgPath) && Objects.equals(price, itemDAO.price);
+        ItemWithCartCount itemWithCartCount = (ItemWithCartCount) o;
+        return count == itemWithCartCount.count && Objects.equals(id, itemWithCartCount.id) && Objects.equals(title, itemWithCartCount.title) && Objects.equals(description, itemWithCartCount.description) && Objects.equals(imgPath, itemWithCartCount.imgPath) && Objects.equals(price, itemWithCartCount.price);
     }
 
     @Override

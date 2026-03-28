@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.ya.practicum.mymarket.model.Item;
-import ru.ya.practicum.mymarket.repositories.dao.ItemDAO;
+import ru.ya.practicum.mymarket.model.ItemWithCartCount;
 
 @Repository
 public interface ItemRepository extends ReactiveCrudRepository<Item, Long> {
@@ -27,9 +27,9 @@ public interface ItemRepository extends ReactiveCrudRepository<Item, Long> {
                 WHERE (LOWER(i.title) LIKE LOWER(CONCAT('%', :search, '%'))
                 OR LOWER(i.description) LIKE LOWER(CONCAT('%', :search, '%')))
             """)
-    Flux<ItemDAO> findAllWithCart(@NotNull String search,
-                                  @NotNull @NotBlank String sessionId,
-                                  @NotNull Sort sort);
+    Flux<ItemWithCartCount> findAllWithCart(@NotNull String search,
+                                            @NotNull @NotBlank String sessionId,
+                                            @NotNull Sort sort);
 
     @Query("""
             SELECT i.id, i.title, i.description, i.img_path as imgPath, i.price, 
@@ -43,7 +43,7 @@ public interface ItemRepository extends ReactiveCrudRepository<Item, Long> {
             LEFT JOIN cart_item ci ON ci.item_id = i.id 
             LEFT JOIN cart c ON ci.cart_id = c.id AND c.session_id = :sessionId
             """)
-    Flux<ItemDAO> findAllInCart(@NotNull @NotBlank @Param("sessionId") String sessionId);
+    Flux<ItemWithCartCount> findAllInCart(@NotNull @NotBlank @Param("sessionId") String sessionId);
 
 
     @Query("""
@@ -57,8 +57,8 @@ public interface ItemRepository extends ReactiveCrudRepository<Item, Long> {
                                       FROM item i
                                       WHERE i.id = :item
             """)
-    Mono<ItemDAO> findByIdAndSessionId(@NotNull @Param("item") Long itemId,
-                                       @NotNull @NotBlank @Param("session") String sessionId);
+    Mono<ItemWithCartCount> findByIdAndSessionId(@NotNull @Param("item") Long itemId,
+                                                 @NotNull @NotBlank @Param("session") String sessionId);
 
 
     Mono<Item> findById(@NotNull Long id);

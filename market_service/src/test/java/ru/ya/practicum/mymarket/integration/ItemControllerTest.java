@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import reactor.core.publisher.Mono;
 import ru.ya.practicum.mymarket.controllers.ItemController;
 import ru.ya.practicum.mymarket.model.CartItem;
+import ru.ya.practicum.mymarket.model.SortMethod;
 import ru.ya.practicum.mymarket.repositories.CartItemRepository;
 import ru.ya.practicum.mymarket.repositories.CartRepository;
 import ru.ya.practicum.mymarket.repositories.ItemRepository;
@@ -65,7 +66,7 @@ public class ItemControllerTest extends AbstractTestWithRedis implements FillCar
         assertThat(doc.select("input[name='search']").val()).isEqualTo("");
     }
 
-    private void checkSort(final Document doc, final ItemController.SortMethod sortMethod) {
+    private void checkSort(final Document doc, final SortMethod sortMethod) {
         final Element sortSelect = doc.select("select[id='sort']").first();
         assertThat(sortSelect).isNotNull();
         final Element firstOption = sortSelect.select("option[selected]").first();
@@ -120,7 +121,7 @@ public class ItemControllerTest extends AbstractTestWithRedis implements FillCar
                             final int pageSize,
                             final int pageNum,
                             final int countPages,
-                            final ItemController.SortMethod method) {
+                            final SortMethod method) {
         checkSearch(doc);
         checkSort(doc, method);
         checkPageSize(doc, pageSize);
@@ -144,7 +145,7 @@ public class ItemControllerTest extends AbstractTestWithRedis implements FillCar
                 .expectBody()
                 .consumeWith(result -> {
                     final Document doc = Jsoup.parse(new String(result.getResponseBody(), StandardCharsets.UTF_8));
-                    checkItems(doc, defSize, defNumber, countPages, ItemController.SortMethod.NO);
+                    checkItems(doc, defSize, defNumber, countPages, SortMethod.NO);
                 });
     }
 
@@ -168,7 +169,7 @@ public class ItemControllerTest extends AbstractTestWithRedis implements FillCar
                 .consumeWith(result -> {
 
                     Document doc = Jsoup.parse(new String(result.getResponseBody(), StandardCharsets.UTF_8));
-                    checkItems(doc, pageSize, pageNumber, countPages, ItemController.SortMethod.NO);
+                    checkItems(doc, pageSize, pageNumber, countPages, SortMethod.NO);
                 });
     }
 
@@ -176,7 +177,7 @@ public class ItemControllerTest extends AbstractTestWithRedis implements FillCar
     @CsvSource(value = {"1, 5, NO", "2, 10, ALPHA", "2, 5, PRICE"})
     public void findAll_withSort(final int pageNumber,
                                  final int pageSize,
-                                 final ItemController.SortMethod method) {
+                                 final SortMethod method) {
 
 
         final int countPages = (int) Math.ceil((double) getCountItems() / pageSize);

@@ -7,15 +7,19 @@ import org.springframework.web.reactive.result.view.Rendering;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 import ru.ya.practicum.mymarket.services.CartService;
+import ru.ya.practicum.mymarket.services.ItemService;
 
 @Controller
 @RequestMapping("/cart/items")
 public class CartController {
 
     private final CartService cartService;
+    private final ItemService  itemService;
 
-    public CartController(@NotNull final CartService cartService) {
+    public CartController(@NotNull final CartService cartService,
+                          @NotNull final ItemService itemService) {
         this.cartService = cartService;
+        this.itemService = itemService;
     }
 
     @GetMapping
@@ -34,8 +38,8 @@ public class CartController {
                                       @NotNull final WebSession session) {
 
         final Mono<Void> cartItemAction = switch (action) {
-            case PLUS -> cartService.incrementItem(itemId, session.getId());
-            case MINUS -> cartService.decrementItem(itemId, session.getId());
+            case PLUS -> itemService.incrementItem(itemId, session.getId());
+            case MINUS -> itemService.decrementItem(itemId, session.getId());
             case null, default -> Mono.empty();
         };
         return cartItemAction.then(Mono.defer(() -> getCart(session)));

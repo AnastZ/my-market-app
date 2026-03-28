@@ -5,30 +5,30 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import ru.ya.practicum.mymarket.model.Order;
 import ru.ya.practicum.mymarket.model.OrderItem;
-import ru.ya.practicum.mymarket.repositories.dao.ItemDAO;
+import ru.ya.practicum.mymarket.model.ItemWithCartCount;
 
 import java.util.List;
 
 @Configuration
-public class DTOConfig {
+public class ConverterConfig {
     @Bean
-    public DTOConvertor<ItemDAO, ItemDTO> itemDTOConvertor() {
+    public EntityConvertor<ItemWithCartCount, ItemDTO> itemDTOConvertor() {
         return i -> {
             return new ItemDTO(i.getId(), i.getTitle(), i.getDescription(), i.getImgPath(), i.getPrice(), i.getCount());
         };
     }
 
     @Bean
-    public DTOConvertor<OrderItem, OrderItemDTO> orderItemDTOConvertor() {
+    public EntityConvertor<OrderItem, OrderItemDTO> orderItemDTOConvertor() {
         return it -> new OrderItemDTO(it.getItemId(), it.getTitle(), it.getPrice(), it.getCount());
     }
 
     @Bean
-    public DTOConvertor<Order, OrderDTO> orderDTOConvertor(@NotNull final DTOConvertor<OrderItem, OrderItemDTO> orderItemConverter) {
+    public EntityConvertor<Order, OrderDTO> orderDTOConvertor(@NotNull final EntityConvertor<OrderItem, OrderItemDTO> orderItemConverter) {
         return order -> {
             final List<OrderItemDTO> items = order.getOrderItems()
                     .stream()
-                    .map(orderItemConverter::toDTO)
+                    .map(orderItemConverter::convert)
                     .toList();
             final Long totalSum = items.stream()
                     .map(OrderItemDTO::price)
@@ -37,5 +37,4 @@ public class DTOConfig {
             return new OrderDTO(order.getId(), items, totalSum);
         };
     }
-
 }

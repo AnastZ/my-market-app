@@ -7,20 +7,15 @@
     <parent>
         <groupId>ru.ya.practicum</groupId>
         <artifactId>my-market-app</artifactId>
-        <version>0.0.3</version>
+        <version>1.0</version>
     </parent>
 
     <artifactId>market_service</artifactId>
-    <version>0.0.3</version>
+    <version>3.0</version>
     <name>market_service</name>
     <description>market_service</description>
 
-    <properties>
-        <jsoup.version>1.17.2</jsoup.version>
-    </properties>
-
     <dependencies>
-
         <!-- Database -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -29,42 +24,37 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.r2dbc</groupId>
             <artifactId>r2dbc-h2</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
-        <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-redis-reactive -->
+        <!-- Redis -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
         </dependency>
 
-
-
-        <!-- Template -->
+        <!-- Template Engine -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
-
+        <!-- Testcontainers -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
-            <version>2.0.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>1.21.4</version>
             <scope>test</scope>
         </dependency>
-
-
-
     </dependencies>
 
     <build>
@@ -77,7 +67,6 @@
             <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>${openapi-generator.version}</version>
                 <executions>
                     <execution>
                         <id>generate-payment-client</id>
@@ -126,7 +115,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <id>add-generated-sources</id>

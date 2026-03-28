@@ -1,24 +1,18 @@
 package ru.ya.practicum.mymarket.services;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import ru.ya.practicum.mymarket.controllers.ItemController;
-import ru.ya.practicum.mymarket.controllers.dto.DTOConvertor;
+import ru.ya.practicum.mymarket.controllers.dto.EntityConvertor;
 import ru.ya.practicum.mymarket.controllers.dto.ItemDTO;
-import ru.ya.practicum.mymarket.model.CartItem;
+import ru.ya.practicum.mymarket.model.*;
 import ru.ya.practicum.mymarket.controllers.dto.ItemsDTO;
-import ru.ya.practicum.mymarket.model.NotFoundException;
-import ru.ya.practicum.mymarket.model.Paging;
 import ru.ya.practicum.mymarket.repositories.ItemRepository;
-import ru.ya.practicum.mymarket.repositories.dao.ItemDAO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +27,7 @@ public class ItemService {
     private final CartItemService cartItemService;
 
     private final int listSize;
-    private final DTOConvertor<ItemDAO, ItemDTO> itemDTOConvertor;
+    private final EntityConvertor<ItemWithCartCount, ItemDTO> itemEntityConvertor;
     private final ItemCacheService itemCacheService;
 
 
@@ -41,21 +35,15 @@ public class ItemService {
                        @NotNull final CartService cartService,
                        @NotNull final CartItemService cartItemService,
                        @Value("${item.list-size}") @NotNull final int listSize,
-                       @NotNull final DTOConvertor<ItemDAO, ItemDTO> itemDTOConvertor,
+                       @NotNull final EntityConvertor<ItemWithCartCount, ItemDTO> itemEntityConvertor,
                        @NotNull final ItemCacheService itemCacheService) {
         this.itemRepository = itemRepository;
         this.cartService = cartService;
         this.cartItemService = cartItemService;
         this.listSize = listSize;
-        this.itemDTOConvertor = itemDTOConvertor;
+        this.itemEntityConvertor = itemEntityConvertor;
         this.itemCacheService = itemCacheService;
     }
-
-    @PostConstruct
-    public void init() {
-        cartService.setItemService(this);
-    }
-
     private static <T> Mono<T> notFound(final Long id) {
         return Mono.error(new NotFoundException("Товар не найден: " + id));
     }
@@ -113,7 +101,7 @@ public class ItemService {
     public @NotNull Mono<ItemsDTO> getItems(@Min(1) final int pageNumber,
                                             @Min(1) final int pageSize,
                                             @NotNull final String search,
-                                            @NotNull final ItemController.SortMethod sortMethod,
+                                            @NotNull final SortMethod sortMethod,
                                             @NotNull @NotBlank final String sessionId) {
         final int skip = (pageNumber - 1) * pageSize;
         return itemCacheService.getAllCached(search, sortMethod, sessionId)
@@ -136,7 +124,7 @@ public class ItemService {
                     return Flux.fromIterable(allItems)
                             .skip(skip)
                             .take(pageSize)
-                            .map(itemDTOConvertor::toDTO)
+                            .map(itemEntityConvertor::convert)
                             .collectList()
                             .flatMapMany(paginatedList ->
                                     convertToNestedLists(Flux.fromIterable(paginatedList), listSize)
@@ -213,17 +201,6 @@ public class ItemService {
 
         return itemCacheService.getById(itemId, sessionId)
                 .switchIfEmpty(notFound(itemId))
-                .map(itemDTOConvertor::toDTO);
-    }
-
-    /**
-     * Получить все объекты в корзине.
-     *
-     * @param sessionId уникальный номер сессии.
-     * @return объекты в корзине.
-     */
-    public Flux<ItemDTO> findAllInCart(@NotNull final String sessionId) {
-        return itemCacheService.getAllCached(sessionId)
-                .map(itemDTOConvertor::toDTO);
+                .map(itemEntityConvertor::convert);
     }
 }

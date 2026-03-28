@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import ru.ya.practicum.mymarket.controllers.dto.DTOConvertor;
+import ru.ya.practicum.mymarket.controllers.dto.EntityConvertor;
 import ru.ya.practicum.mymarket.controllers.dto.OrderDTO;
 import ru.ya.practicum.mymarket.model.NotFoundException;
 import ru.ya.practicum.mymarket.model.Order;
@@ -27,20 +27,20 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
-    private final DTOConvertor<Order, OrderDTO> orderDTOConvertor;
+    private final EntityConvertor<Order, OrderDTO> orderEntityConvertor;
     private final CartItemService cartItemService;
     private final BalanceApi balanceApi;
     private final PaymentServiceHealthChecker paymentServiceHealthChecker;
 
     public OrderService(@NotNull final OrderRepository orderRepository,
                         @NotNull final OrderItemRepository orderItemRepository,
-                        @NotNull final DTOConvertor<Order, OrderDTO> orderDTOConvertor,
+                        @NotNull final EntityConvertor<Order, OrderDTO> orderEntityConvertor,
                         @NotNull final CartItemService cartItemService,
                         @NotNull final BalanceApi balanceApi,
                         @NotNull final PaymentServiceHealthChecker paymentServiceHealthChecker) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
-        this.orderDTOConvertor = orderDTOConvertor;
+        this.orderEntityConvertor = orderEntityConvertor;
         this.cartItemService = cartItemService;
         this.balanceApi = balanceApi;
         this.paymentServiceHealthChecker = paymentServiceHealthChecker;
@@ -80,7 +80,7 @@ public class OrderService {
         return orderRepository.findAll()
                 .switchIfEmpty(notFound())
                 .flatMap(this::fillOrder)
-                .map(orderDTOConvertor::toDTO);
+                .map(orderEntityConvertor::convert);
     }
 
     /**
@@ -94,7 +94,7 @@ public class OrderService {
         return orderRepository.findById(id)
                 .switchIfEmpty(notFound(id))
                 .flatMap(this::fillOrder)
-                .map(orderDTOConvertor::toDTO);
+                .map(orderEntityConvertor::convert);
     }
 
     /**
@@ -127,7 +127,7 @@ public class OrderService {
                                                 });
                                     }))
                             .flatMap(order -> {
-                                final OrderDTO orderDTO = orderDTOConvertor.toDTO(order);
+                                final OrderDTO orderDTO = orderEntityConvertor.convert(order);
 
                                 return balanceApi.payment(sessionId, orderDTO.getTotalSum())
                                         .flatMap(balance -> {

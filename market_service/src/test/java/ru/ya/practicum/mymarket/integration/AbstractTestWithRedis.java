@@ -1,22 +1,18 @@
 package ru.ya.practicum.mymarket.integration;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.cache.CacheManager;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
-import reactor.core.publisher.Mono;
 import ru.ya.practicum.mymarket.controllers.ItemController;
-import ru.ya.practicum.mymarket.repositories.dao.ItemDAO;
+import ru.ya.practicum.mymarket.model.SortMethod;
 
-import java.time.Duration;
-import java.util.List;
+import java.util.Objects;
 
 @Testcontainers
 public abstract class AbstractTestWithRedis extends AbstractTest {
@@ -40,23 +36,20 @@ public abstract class AbstractTestWithRedis extends AbstractTest {
         registry.add("spring.data.redis.host", redis::getHost);
         registry.add("spring.data.redis.port", redis::getFirstMappedPort);
     }
-
     @Autowired
-    protected ReactiveRedisTemplate<String, Object> reactiveRedisTemplate;
+    protected CacheManager cacheManager;
 
-
-    protected List<ItemDAO> mockItems;
     protected static final String SEARCH = "ite";
-    protected static final ItemController.SortMethod SORT_METHOD = ItemController.SortMethod.ALPHA;
+    protected static final SortMethod SORT_METHOD = SortMethod.ALPHA;
 
     @BeforeEach
     void setUp() {
-        reactiveRedisTemplate.execute(conn -> conn.serverCommands().flushAll())
-                .timeout(Duration.ofSeconds(5))
-                .doOnError(e -> System.err.println("Flush error: " + e.getMessage()))
-                .onErrorResume(e -> Mono.empty())
-                .blockLast();
+        clearAllCaches();
     }
 
-
+    private void clearAllCaches() {
+        cacheManager.getCacheNames().forEach(cacheName -> {
+            Objects.requireNonNull(cacheManager.getCache(cacheName)).clear();
+        });
+    }
 }

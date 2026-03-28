@@ -1,15 +1,17 @@
 package ru.ya.practicum.mymarket.services;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.ya.practicum.mymarket.controllers.dto.CartDTO;
+import ru.ya.practicum.mymarket.controllers.dto.EntityConvertor;
 import ru.ya.practicum.mymarket.controllers.dto.ItemDTO;
 import ru.ya.practicum.mymarket.model.Cart;
+import ru.ya.practicum.mymarket.model.ItemWithCartCount;
 import ru.ya.practicum.mymarket.repositories.CartRepository;
 import ru.ya.practicum.payment.client.api.BalanceApi;
 
@@ -20,22 +22,22 @@ public class CartService {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final CartRepository cartRepository;
-    private ItemService itemService;
     private final BalanceApi balanceApi;
     private final PaymentServiceHealthChecker paymentServiceHealthChecker;
+    private final ItemCacheService itemCacheService;
+    private final EntityConvertor<ItemWithCartCount, ItemDTO> itemEntityConvertor;
 
     public CartService(@NotNull final CartRepository cartRepository,
                        @NotNull final BalanceApi balanceApi,
-                       @NotNull final PaymentServiceHealthChecker paymentServiceHealthChecker) {
+                       @NotNull final PaymentServiceHealthChecker paymentServiceHealthChecker,
+                       @NotNull final ItemCacheService itemCacheService,
+                       @NotNull final EntityConvertor<ItemWithCartCount, ItemDTO> itemEntityConvertor) {
         this.cartRepository = cartRepository;
         this.balanceApi = balanceApi;
         this.paymentServiceHealthChecker = paymentServiceHealthChecker;
+        this.itemCacheService = itemCacheService;
+        this.itemEntityConvertor = itemEntityConvertor;
     }
-
-    public void setItemService(@NotNull final ItemService itemService) {
-        this.itemService = itemService;
-    }
-
     /**
      * Найти существующую корзину в БД по уникальному полю - id сессии
      * или создать новый объект корзины с переданным id сессии.
@@ -71,7 +73,7 @@ public class CartService {
 
     private Mono<CartDTO> loadCartBySessionId(@NotNull final String sessionId,
                                               final Function<Long, Boolean> successBuy) {
-        return itemService.findAllInCart(sessionId)
+        return findAllInCart(sessionId)
                 .collectList()
                 .map(items -> {
                     final Long total = items.stream()
@@ -82,13 +84,14 @@ public class CartService {
                 });
     }
 
-    public Mono<Void> incrementItem(@NotNull final Long itemId,
-                                    @NotNull @NotBlank final String sessionId) {
-        return itemService.incrementItem(itemId, sessionId);
-    }
-
-    public Mono<Void> decrementItem(@NotNull final Long itemId,
-                                    @NotNull @NotBlank final String sessionId) {
-        return itemService.decrementItem(itemId, sessionId);
+    /**
+     * Получить все объекты в корзине.
+     *
+     * @param sessionId уникальный номер сессии.
+     * @return объекты в корзине.
+     */
+    public Flux<ItemDTO> findAllInCart(@NotNull final String sessionId) {
+        return itemCacheService.getAllCached(sessionId)
+                .map(itemEntityConvertor::convert);
     }
 }

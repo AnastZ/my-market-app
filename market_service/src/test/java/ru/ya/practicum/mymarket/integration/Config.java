@@ -1,23 +1,14 @@
 package ru.ya.practicum.mymarket.integration;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.NotNull;
-import org.mockito.Mockito;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
-import org.springframework.data.redis.connection.ReactiveRedisConnection;
-import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.serializer.RedisSerializationContext;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import ru.ya.practicum.mymarket.repositories.OrderItemRepository;
+import ru.ya.practicum.mymarket.controllers.dto.EntityConvertor;
+import ru.ya.practicum.mymarket.model.Item;
+import ru.ya.practicum.mymarket.model.ItemWithCartCount;
 import ru.ya.practicum.mymarket.services.PaymentServiceHealthChecker;
 import ru.ya.practicum.payment.client.api.BalanceApi;
 
@@ -50,5 +41,12 @@ public class Config {
             }
         };
     }
-
+    @Bean
+    public EntityConvertor<ItemWithCartCount, Item> getItemConvertor() {
+        return entity -> {
+            final Item i = new Item(entity.getTitle(), entity.getDescription(), entity.getImgPath(), entity.getPrice());
+            i.setId(entity.getId());
+            return i;
+        };
+    }
 }
