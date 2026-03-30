@@ -1,17 +1,79 @@
-version: '3.8'
 
 services:
-
-  web:
-    build: .
-    container_name: my-market
+  redis:
+    image: redis:7-alpine
+    container_name: market-redis
     ports:
-      - "8080:8080"
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - market-network
+    restart: unless-stopped
 
+  payment_service:
+    build:
+      context: .
+      dockerfile: payment_service/Dockerfile
+    container_name: payment-service
+    ports:
+      - "${PAYMENT_PORT:-8085}:${PAYMENT_PORT:-8085}"
     environment:
+      - PAYMENT_PORT=${PAYMENT_PORT:-8085}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PAYMENT_PORT:-8085}/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - market-network
+    restart: unless-stopped
+
+  market_service:
+    build:
+      context: .
+      dockerfile: market_service/Dockerfile
+    container_name: market-service
+    ports:
+      - "${MARKET_PORT:-8084}:${MARKET_PORT:-8084}"
+    environment:
+      - MARKET_PORT=${MARKET_PORT:-8084}
+      - DB_URL=r2dbc:h2:mem:///market;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
       - DB_USER=sa
-      - DB_PASSWORD=sa
+      - DB_PASSWORD=password
+      - CACHE_DB_HOST=redis
+      - CACHE_DB_PORT=6379
+      - PAYMENT_URL=http://payment_service:${PAYMENT_PORT:-8085}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    env_file:
+      - .env
+    depends_on:
+      payment_service:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    networks:
+      - market-network
+    restart: unless-stopped
 
 volumes:
-  db_data:
+  redis-data:
 
+networks:
+  market-network:
+    driver: bridge
