@@ -44,6 +44,7 @@ public class ItemService {
         this.itemEntityConvertor = itemEntityConvertor;
         this.itemCacheService = itemCacheService;
     }
+
     private static <T> Mono<T> notFound(final Long id) {
         return Mono.error(new NotFoundException("Товар не найден: " + id));
     }
@@ -95,6 +96,7 @@ public class ItemService {
      * @param pageSize   количество объектов на странице.
      * @param search     поисковой запрос (фильтрация по названию/описанию), если фильтрация не нужна, то передать пустую строку.
      * @param sortMethod метод сортировки.
+     * @param username   уникальное имя пользователя
      * @return найденные объекты.
      */
     @Transactional(readOnly = true)
@@ -102,9 +104,9 @@ public class ItemService {
                                             @Min(1) final int pageSize,
                                             @NotNull final String search,
                                             @NotNull final SortMethod sortMethod,
-                                            @NotNull @NotBlank final String sessionId) {
+                                            @NotNull @NotBlank final String username) {
         final int skip = (pageNumber - 1) * pageSize;
-        return itemCacheService.getAllCached(search, sortMethod, sessionId)
+        return itemCacheService.getAllCached(search, sortMethod, username)
                 .switchIfEmpty(Mono.error(new NotFoundException("Товары не найдены.")))
                 .collectList()
                 .flatMapMany(allItems -> {
@@ -137,9 +139,9 @@ public class ItemService {
 
     @Transactional
     public Mono<Void> incrementItem(@NotNull final Long itemId,
-                                    @NotNull @NotBlank final String sessionId) {
+                                    @NotNull @NotBlank final String username) {
 
-        return cartItemService.findByIdInCart(itemId, sessionId)
+        return cartItemService.findByIdInCart(itemId, username)
                 .flatMap(item -> {
                     item.incrementCount();
                     return cartItemService.save(item);
@@ -148,7 +150,7 @@ public class ItemService {
                         itemRepository.findById(itemId)
                                 .switchIfEmpty(notFound(itemId))
                                 .flatMap(item ->
-                                        cartService.getOrCreateBySessionId(sessionId)
+                                        cartService.getOrCreate(username)
                                                 .switchIfEmpty(Mono.error(new NotFoundException("Корзина не найдена.")))
                                                 .flatMap(c -> {
                                                     final CartItem newCartItem = new CartItem(
@@ -168,15 +170,15 @@ public class ItemService {
      * Уменьшить количество товара в корзине на единицу.
      * Если количество товара стало равным 0, то он удаляется из корзины.
      *
-     * @param itemId    уникальный номер товара.
-     * @param sessionId уникальный номер сессии.
+     * @param itemId   уникальный номер товара.
+     * @param username уникальное имя пользователя.
      */
 
     @Transactional
     public Mono<Void> decrementItem(@NotNull final Long itemId,
-                                    @NotNull @NotBlank final String sessionId) {
+                                    @NotNull @NotBlank final String username) {
 
-        return cartItemService.findByIdInCart(itemId, sessionId)
+        return cartItemService.findByIdInCart(itemId, username)
                 .switchIfEmpty(notFound(itemId))
                 .flatMap(c -> {
                     c.decrementCount();
@@ -192,14 +194,14 @@ public class ItemService {
      * Найти объект в БД по id.
      * Id сессии нужен, чтобы создать объект ItemDAO, который хранит количество объекта в корзине для переданной сессии.
      *
-     * @param itemId    уникальный номер товара.
-     * @param sessionId уникальный номер сессии.
+     * @param itemId   уникальный номер товара.
+     * @param username уникальное имя пользователя.
      * @return товар.
      */
     public Mono<ItemDTO> findItemInCart(@NotNull final Long itemId,
-                                        @NotNull @NotBlank final String sessionId) {
+                                        @NotNull @NotBlank final String username) {
 
-        return itemCacheService.getById(itemId, sessionId)
+        return itemCacheService.getById(itemId, username)
                 .switchIfEmpty(notFound(itemId))
                 .map(itemEntityConvertor::convert);
     }

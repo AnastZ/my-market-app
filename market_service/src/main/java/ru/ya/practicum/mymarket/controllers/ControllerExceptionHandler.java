@@ -5,9 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ServerWebInputException;
+import reactor.core.publisher.Mono;
 import ru.ya.practicum.mymarket.model.NotFoundException;
 
 import javax.naming.ServiceUnavailableException;
@@ -37,4 +40,11 @@ public class ControllerExceptionHandler {
     public void handleIllegalArgumentException(@NotNull final Exception e) {
         logger.error("Unexpected error: ", e);
     }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Mono<Void> handleAuthorizationDenied(AuthorizationDeniedException ex) {
+        return Mono.empty();
+    }
+
 }

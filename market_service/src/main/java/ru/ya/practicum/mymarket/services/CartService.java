@@ -3,6 +3,10 @@ package ru.ya.practicum.mymarket.services;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.oauth2.client.AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -46,34 +50,34 @@ public class CartService {
      * @return корзина, существующая в БД.
      */
     @Transactional
-    public Mono<Cart> getOrCreateBySessionId(@NotNull final String sessionId) {
-        return cartRepository.findBySessionId(sessionId)
-                .switchIfEmpty(Mono.defer(() -> cartRepository.save(new Cart(sessionId))));
+    public Mono<Cart> getOrCreate(@NotNull final String username) {
+        return cartRepository.findByUsername(username)
+                .switchIfEmpty(Mono.defer(() -> cartRepository.save(new Cart(username))));
     }
 
     /**
      * Получить объект корзины с товарами по уникальному номеру сессии.
      *
-     * @param sessionId уникальный номер сессии.
+     * @param username уникальный номер сессии.
      * @return объект корзины с товарами
      */
     @Transactional(readOnly = true)
-    public Mono<CartDTO> getCartBySessionId(@NotNull final String sessionId) {
+    public Mono<CartDTO> getCart(@NotNull final String username) {
         return paymentServiceHealthChecker.isHealthy()
                 .flatMap(healthy -> {
                     if (healthy) {
-                        return balanceApi.getBalance(sessionId)
-                                .flatMap(balance -> loadCartBySessionId(sessionId, t -> t <= balance));
+                        return balanceApi.getBalance(username)
+                                .flatMap(balance -> loadCart(username, t -> t <= balance));
                     } else {
                         log.error("Payment service is not available.");
-                        return loadCartBySessionId(sessionId, t -> false);
+                        return loadCart(username, t -> false);
                     }
                 });
     }
 
-    private Mono<CartDTO> loadCartBySessionId(@NotNull final String sessionId,
-                                              final Function<Long, Boolean> successBuy) {
-        return findAllInCart(sessionId)
+    private Mono<CartDTO> loadCart(@NotNull final String username,
+                                   final Function<Long, Boolean> successBuy) {
+        return findAllInCart(username)
                 .collectList()
                 .map(items -> {
                     final Long total = items.stream()
@@ -87,11 +91,11 @@ public class CartService {
     /**
      * Получить все объекты в корзине.
      *
-     * @param sessionId уникальный номер сессии.
+     * @param username уникальный номер сессии.
      * @return объекты в корзине.
      */
-    public Flux<ItemDTO> findAllInCart(@NotNull final String sessionId) {
-        return itemCacheService.getAllCached(sessionId)
+    public Flux<ItemDTO> findAllInCart(@NotNull final String username) {
+        return itemCacheService.getAllCached(username)
                 .map(itemEntityConvertor::convert);
     }
 }

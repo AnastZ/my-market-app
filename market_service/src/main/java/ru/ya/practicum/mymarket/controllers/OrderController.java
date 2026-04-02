@@ -1,6 +1,7 @@
 package ru.ya.practicum.mymarket.controllers;
 
 import jakarta.validation.constraints.NotNull;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,6 +27,7 @@ public class OrderController {
      * @return представление "orders" с атрибутом модели "orders".
      */
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public Mono<Rendering> getOrders() {
         return Mono.just(Rendering.view("orders")
                 .modelAttribute("orders", orderService.findAll())
@@ -40,6 +42,7 @@ public class OrderController {
      * @return представление "order" с атрибутомами модели: "order", "newOrder".
      */
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public Mono<Rendering> getOrder(@PathVariable("id") final Long orderId,
                                     @RequestParam(name = "newOrder", required = false, defaultValue = "false") final boolean newOrder) {
 

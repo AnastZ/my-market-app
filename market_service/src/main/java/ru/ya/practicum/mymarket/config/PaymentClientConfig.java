@@ -12,16 +12,9 @@ import ru.ya.practicum.payment.client.api.BalanceApi;
 public class PaymentClientConfig {
 
     @Bean
-    public WebClient paymentWebClient(@Value("${payment-service.url}") final String paymentServiceUrl) {
-        return WebClient.builder()
-                .baseUrl(paymentServiceUrl)
-                .build();
-    }
-    @Bean
     public ApiClient paymentApiClient(@NotNull final WebClient paymentWebClient) {
         return new ApiClient(paymentWebClient);
     }
-
     @Bean
     public BalanceApi balanceApi(@NotNull final ApiClient paymentApiClient) {
         return new BalanceApi(paymentApiClient);

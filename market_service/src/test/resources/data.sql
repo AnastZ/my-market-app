@@ -30,7 +30,7 @@ INSERT INTO ITEM (TITLE, DESCRIPTION, IMG_PATH, PRICE, VERSION) VALUES
                                                                     ('Принтер лазерный', 'Многофункциональное устройство для печати', '/images/printer.jpg', 35000, 0);
 
 -- Создание тестовых корзин
-INSERT INTO CART (SESSION_ID, VERSION) VALUES
+INSERT INTO CART (USERNAME, VERSION) VALUES
                                            ('test-session-123', 0),
                                            ('test-session-456', 0),
                                            ('empty-cart-session', 0),

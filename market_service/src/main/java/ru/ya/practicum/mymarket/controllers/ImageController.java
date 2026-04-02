@@ -10,7 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 import ru.ya.practicum.mymarket.services.ImageService;
 
-@RestController("/images")
+@RestController
+@RequestMapping("/images")
 public class ImageController {
 
     private final ImageService imageService;

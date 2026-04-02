@@ -2,6 +2,9 @@ package ru.ya.practicum.mymarket.controllers;
 
 
 import jakarta.validation.constraints.NotNull;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,13 +27,14 @@ public class BuyController {
     /**
      * Оформление (создание) заказа и перенаправление на другую страницу.
      *
-     * @param session сессия.
+     * @param user данные о пользователе.
      * @return источник представления.
      */
     @PostMapping
-    public Mono<Rendering> buy(@NotNull final WebSession session) {
+    @PreAuthorize("isAuthenticated()")
+    public Mono<Rendering> buy(@AuthenticationPrincipal final UserDetails user) {
 
-        return orderService.createOrder(session.getId())
+        return orderService.createOrder(user.getUsername())
                 .map(order -> Rendering.redirectTo("orders/{id}")
                         .modelAttribute("id", order.id())
                         .modelAttribute("newOrder", true)

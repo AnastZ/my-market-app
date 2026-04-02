@@ -26,7 +26,7 @@ public interface FillCart{
                 .flatMapMany(itemRepository::saveAll);
     }
 
-    default Flux<CartItem> fillDb(final String sessionId,
+    default Flux<CartItem> fillDb(final String username,
                                   final CartRepository cartRepository,
                                   final ItemRepository itemRepository,
                                   final CartItemRepository cartItemRepository){
@@ -34,7 +34,7 @@ public interface FillCart{
         final long min = 1;
         final long max = 100;
         final Supplier<Long> count = ()->random.nextLong((max - min) + 1L) + min;
-        return cartRepository.save(new Cart(sessionId))
+        return cartRepository.save(new Cart(username))
                 .flatMapMany(savedCart ->
                         fillItems(itemRepository)
                                 .map(savedItem -> {

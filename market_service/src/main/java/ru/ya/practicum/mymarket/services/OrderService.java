@@ -101,17 +101,17 @@ public class OrderService {
      * Сохранить заказ. Из БД извлекаются объекты, помещённые в корзину,
      * и создаётся заказ, наполненный ими.
      *
-     * @param sessionId уникальный номер сессии.
+     * @param username уникальное имя пользователя.
      * @return источник данных с сохранённым заказом.
      */
     @Transactional
-    public @NotNull Mono<OrderDTO> createOrder(@NotNull @NotBlank final String sessionId) {
+    public @NotNull Mono<OrderDTO> createOrder(@NotNull @NotBlank final String username) {
         return paymentServiceHealthChecker.isHealthy()
                 .flatMap(healthy -> {
                     if (!healthy)
                         return Mono.error(new ServiceUnavailableException("Payment service is not available."));
 
-                    return cartItemService.findItemsBySessionId(sessionId)
+                    return cartItemService.findItems(username)
                             .collectList()
                             .switchIfEmpty(notFound())
                             .flatMap(items -> orderRepository.save(new Order())
@@ -129,7 +129,7 @@ public class OrderService {
                             .flatMap(order -> {
                                 final OrderDTO orderDTO = orderEntityConvertor.convert(order);
 
-                                return balanceApi.payment(sessionId, orderDTO.getTotalSum())
+                                return balanceApi.payment(username, orderDTO.getTotalSum())
                                         .flatMap(balance -> {
                                             if (balance >= 0) {
                                                 return Mono.just(orderDTO);
@@ -147,7 +147,7 @@ public class OrderService {
                     return Mono.error(e);
                 })
                 .onErrorResume(PaymentError.class, e -> {
-                    log.error("Payment failed for session {}: {}", sessionId, e.getMessage());
+                    log.error("Payment failed for session {}: {}", username, e.getMessage());
                     return Mono.error(e);
                 });
     }

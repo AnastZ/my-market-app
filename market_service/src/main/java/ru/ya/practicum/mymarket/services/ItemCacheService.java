@@ -42,39 +42,39 @@ public class ItemCacheService {
      *
      * @param search     поисковой запрос.
      * @param sortMethod метод сортировки.
-     * @param sessionId  уникальный номер сессии.
+     * @param username  уникальное имя пользователя.
      * @return
      */
-    @Cacheable(value = CACHE_ITEMS_LIST, key = "#search + ':' + #sortMethod.name() + ':' + #sessionId")
+    @Cacheable(value = CACHE_ITEMS_LIST, key = "#search + ':' + #sortMethod.name() + ':' + #username")
     public Flux<ItemWithCartCount> getAllCached(@NotNull final String search,
                                                 @NotNull final SortMethod sortMethod,
-                                                @NotNull final String sessionId) {
+                                                @NotNull final String username) {
 
-        return loadAllAndCache(search, sortMethod, sessionId);
+        return loadAllAndCache(search, sortMethod, username);
     }
 
     /**
      * Получить товары в корзине из кэша, либо из БД.
      *
-     * @param sessionId идентификатор сессии (корзины).
+     * @param username уникальное имя пользователя.
      * @return
      */
-    @Cacheable(value = CACHE_ITEMS_CART, key = "#sessionId")
-    public Flux<ItemWithCartCount> getAllCached(@NotNull final String sessionId) {
+    @Cacheable(value = CACHE_ITEMS_CART, key = "#username")
+    public Flux<ItemWithCartCount> getAllCached(@NotNull final String username) {
 
-        return loadAllAndCache(sessionId);
+        return loadAllAndCache(username);
     }
 
     /**
      * Получить товар по уникальному номеру из кэша, либо из БД.
      *
      * @param itemId    уникальный номер товара.
-     * @param sessionId уникальный номер сессии.
+     * @param username уникальное имя пользователя.
      * @return
      */
-    @Cacheable(value = CACHE_ITEM, key = "#itemId + ':' + #sessionId")
-    public Mono<ItemWithCartCount> getById(@NotNull final Long itemId, @NotNull final String sessionId) {
-        return loadOneAndCache(itemId, sessionId);
+    @Cacheable(value = CACHE_ITEM, key = "#itemId + ':' + #username")
+    public Mono<ItemWithCartCount> getById(@NotNull final Long itemId, @NotNull final String username) {
+        return loadOneAndCache(itemId, username);
     }
 
     /**
@@ -82,41 +82,41 @@ public class ItemCacheService {
      *
      * @param search     поисковой запрос.
      * @param sortMethod метод сортировки.
-     * @param sessionId  уникальный номер сессии.
+     * @param username  уникальное имя пользователя.
      * @return
      */
     private Flux<ItemWithCartCount> loadAllAndCache(@NotNull final String search,
                                                     @NotNull final SortMethod sortMethod,
-                                                    @NotNull final String sessionId) {
+                                                    @NotNull final String username) {
         final Sort sort = switch (sortMethod) {
             case ALPHA -> Sort.by("title");
             case PRICE -> Sort.by("price");
             default -> Sort.unsorted();
         };
-        return itemRepository.findAllWithCart(search, sessionId, sort);
+        return itemRepository.findAllWithCart(search, username, sort);
     }
 
     /**
      * Загрузить все товары корзины (по уникальному значению сессии).
      *
-     * @param sessionId уникальный значению сессии.
+     * @param username уникальное имя пользователя.
      * @return
      */
-    private Flux<ItemWithCartCount> loadAllAndCache(@NotNull final String sessionId) {
+    private Flux<ItemWithCartCount> loadAllAndCache(@NotNull final String username) {
 
-        return itemRepository.findAllInCart(sessionId);
+        return itemRepository.findAllInCart(username);
     }
 
     /**
      * Загрузить один товар по его уникальному номеру.
      *
      * @param itemId    уникальный номер товара.
-     * @param sessionId уникальный номер сессии.
+     * @param username уникальное имя пользователя.
      * @return
      */
     private Mono<ItemWithCartCount> loadOneAndCache(@NotNull final Long itemId,
-                                                    @NotNull final String sessionId) {
-        return itemRepository.findByIdAndSessionId(itemId, sessionId);
+                                                    @NotNull final String username) {
+        return itemRepository.findByIdAndSessionId(itemId, username);
     }
 
     /**
@@ -130,17 +130,17 @@ public class ItemCacheService {
     /**
      * Инвалидировать кэш конкретного товара.
      */
-    @CacheEvict(value = CACHE_ITEM, key = "#itemId + ':' + #sessionId")
-    public Mono<Void> evictItemCache(@NotNull final Long itemId, @NotNull final String sessionId) {
+    @CacheEvict(value = CACHE_ITEM, key = "#itemId + ':' + #username")
+    public Mono<Void> evictItemCache(@NotNull final Long itemId, @NotNull final String username) {
         return Mono.empty();
     }
 
     /**
      * Обновить кэш товара после обновления в БД.
      */
-    @CachePut(value = CACHE_ITEM, key = "#itemId + ':' + #sessionId")
+    @CachePut(value = CACHE_ITEM, key = "#itemId + ':' + #username")
     public Mono<ItemWithCartCount> updateItemCache(@NotNull final Long itemId,
-                                                   @NotNull final String sessionId,
+                                                   @NotNull final String username,
                                                    @NotNull final ItemWithCartCount updatedItem) {
         return Mono.just(updatedItem);
     }

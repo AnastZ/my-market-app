@@ -30,7 +30,6 @@ public class BuyControllerTest extends AbstractTestWithRedis{
         webTestClient.post()
                 .uri("/buy")
                 .contentType(MediaType.TEXT_HTML)
-                .cookie("SESSION", sessionId)
                 .exchange()
                 .expectStatus().is3xxRedirection()
                 .expectHeader()

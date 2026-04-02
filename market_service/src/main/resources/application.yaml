@@ -29,6 +29,18 @@ spring:
        cache-null-values: false
        key-prefix: ""
        use-key-prefix: true
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: ${MARKET_AUTH_CLIENT_URI:http://localhost:8080/realms/your-realm}
+        registration:
+          keycloak:
+            provider: keycloak
+            client-id: market-app
+            client-secret: ваш-client-secret
+            scope: openid, profile, email
 
 server:
   port: ${MARKET_PORT:8084}

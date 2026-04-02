@@ -45,7 +45,7 @@ public class CartControllerTest extends AbstractTestWithRedis implements FillCar
     void setUp() {
         super.setUp();
         FillCart.super
-                .fillDb(sessionId, cartRepository, itemRepository, cartItemRepository)
+                .fillDb(username, cartRepository, itemRepository, cartItemRepository)
                 .collectList()
                 .block();
     }
@@ -56,7 +56,6 @@ public class CartControllerTest extends AbstractTestWithRedis implements FillCar
 
         final String result = webTestClient.get()
                 .uri(path)
-                .cookie("SESSION", sessionId)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.TEXT_HTML_VALUE)

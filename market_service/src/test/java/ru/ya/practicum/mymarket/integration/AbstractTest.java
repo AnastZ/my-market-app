@@ -13,5 +13,6 @@ import java.util.UUID;
 public abstract class AbstractTest {
     @Autowired
     protected WebTestClient webTestClient;
-    protected final String sessionId = String.valueOf(UUID.randomUUID());
+
+    protected static final String username = "username";
 }

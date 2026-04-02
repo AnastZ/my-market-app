@@ -1,16 +1,20 @@
 package ru.ya.practicum.payment.api;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class BalanceControllerTests extends AbstractTest{
+class BalanceControllerTests extends AbstractTest {
 
     @Value("${balance.min}")
     private long min;
@@ -18,12 +22,12 @@ class BalanceControllerTests extends AbstractTest{
     @Value("${balance.max}")
     private long max;
 
-
-
     @Test
+    @WithMockUser(authorities = {"CLIENT"})
     void getBalance_success() {
-        webTestClient.get()
-                .uri("/balance/{sessionId}", "sessionId")
+        webTestClient
+                .get()
+                .uri("/balance/{username}", "username")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -36,10 +40,13 @@ class BalanceControllerTests extends AbstractTest{
                             "Balance should be between " + min + " and " + max);
                 });
     }
+
     @Test
-    void payment_success_positiveBalance(){
-        webTestClient.post()
-                .uri("/payment/{sessionId}", "sessionId")
+    @WithMockUser(authorities = {"CLIENT"})
+    void payment_success_positiveBalance() {
+        webTestClient
+                .post()
+                .uri("/payment/{username}", "username")
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(min - 1L)
                 .exchange()
@@ -52,10 +59,12 @@ class BalanceControllerTests extends AbstractTest{
                     assertTrue(balanceAfterPayment > 0);
                 });
     }
+
     @Test
-    void payment_success_negativeBalance(){
+    @WithMockUser(authorities = {"CLIENT"})
+    void payment_success_negativeBalance() {
         webTestClient.post()
-                .uri("/payment/{sessionId}", "sessionId")
+                .uri("/payment/{username}", "username")
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(max - 1L)
                 .exchange()
