@@ -5,8 +5,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import ru.ya.practicum.mymarket.integration.config.SecurityConfig;
 
-@Import(SecurityConfiguration.class)
+@Import(SecurityConfig.class)
 @ActiveProfiles("test")
 public class SecurityTest extends AbstractTestWithRedis{
 

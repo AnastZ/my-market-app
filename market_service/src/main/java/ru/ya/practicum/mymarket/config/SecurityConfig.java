@@ -1,5 +1,6 @@
 package ru.ya.practicum.mymarket.config;
 
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -50,8 +51,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public ReactiveUserDetailsService userDetailsService(UserRepository userRepository,
-                                                         UserRoleRepository userRoleRepository) {
+    public ReactiveUserDetailsService userDetailsService(@NotNull final UserRepository userRepository,
+                                                         @NotNull final UserRoleRepository userRoleRepository) {
         return username -> userRepository.findByUsername(username)
                 .switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found: " + username)))
                 .flatMap(user->userRoleRepository.findByUsername(username)

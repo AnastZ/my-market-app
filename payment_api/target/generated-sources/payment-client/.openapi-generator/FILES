@@ -1,6 +1,5 @@
 .github/workflows/maven.yml
 .gitignore
-.openapi-generator-ignore
 .travis.yml
 README.md
 api/openapi.yaml
@@ -29,4 +28,3 @@ src/main/java/ru/ya/practicum/payment/client/auth/ApiKeyAuth.java
 src/main/java/ru/ya/practicum/payment/client/auth/Authentication.java
 src/main/java/ru/ya/practicum/payment/client/auth/HttpBasicAuth.java
 src/main/java/ru/ya/practicum/payment/client/auth/HttpBearerAuth.java
-src/test/java/ru/ya/practicum/payment/client/api/BalanceApiTest.java

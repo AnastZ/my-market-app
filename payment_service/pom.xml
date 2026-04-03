@@ -28,6 +28,7 @@
             <artifactId>payment_api</artifactId>
             <version>${payment_api.version}</version>
         </dependency>
+        
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -47,11 +48,6 @@
             <artifactId>spring-security-oauth2-resource-server</artifactId>
             <scope>compile</scope>
         </dependency>
-     <!--   <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-testcontainers</artifactId>
-            <scope>test</scope>
-        </dependency>-->
     </dependencies>
 
     <build>

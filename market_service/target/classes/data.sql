@@ -1,18 +1,20 @@
--- Очистка таблиц (если нужно перезаполнить)
 SET REFERENTIAL_INTEGRITY FALSE;
 TRUNCATE TABLE ORDER_ITEM;
 TRUNCATE TABLE ORDER_TABLE;
 TRUNCATE TABLE CART_ITEM;
 TRUNCATE TABLE CART;
 TRUNCATE TABLE ITEM;
+TRUNCATE TABLE USERS;
+TRUNCATE TABLE USER_ROLES;
 SET REFERENTIAL_INTEGRITY TRUE;
 
--- Сброс последовательностей (для H2)
 ALTER TABLE ITEM ALTER COLUMN ID RESTART WITH 1;
 ALTER TABLE CART ALTER COLUMN ID RESTART WITH 1;
 ALTER TABLE CART_ITEM ALTER COLUMN ID RESTART WITH 1;
 ALTER TABLE ORDER_TABLE ALTER COLUMN ID RESTART WITH 1;
 ALTER TABLE ORDER_ITEM ALTER COLUMN ID RESTART WITH 1;
+ALTER TABLE USERS ALTER COLUMN  ID RESTART WITH 1;
+ALTER TABLE USER_ROLES ALTER COLUMN ID RESTART WITH 1;
 
 -- Добавление тестовых товаров
 INSERT INTO ITEM (TITLE, DESCRIPTION, IMG_PATH, PRICE, VERSION) VALUES
@@ -60,3 +62,9 @@ INSERT INTO ORDER_ITEM (ORDER_ID, ITEM_ID, TITLE, COUNT, PRICE_AT_ORDER, VERSION
                                                                                       (1, 3, 'Наушники Wireless', 2, 15000, 0),
                                                                                       (2, 4, 'Планшет Tab 10', 1, 40000, 0),
                                                                                       (2, 5, 'Умные часы Watch 5', 1, 25000, 0);
+INSERT INTO USERS (USERNAME) VALUES
+                                     (TEST1),
+                                     (TEST2);
+INSERT INTO USER_ROLES(USERNAME, USER_ROLE) VALUES
+                                                (TEST1, CLIENT),
+                                                (TEST2, USER);

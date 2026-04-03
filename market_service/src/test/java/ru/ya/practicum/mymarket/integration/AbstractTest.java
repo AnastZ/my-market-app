@@ -14,5 +14,5 @@ public abstract class AbstractTest {
     @Autowired
     protected WebTestClient webTestClient;
 
-    protected static final String username = "username";
+    public static final String username = "username";
 }

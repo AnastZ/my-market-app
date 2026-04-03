@@ -1,0 +1,42 @@
+{
+  "realm": "test-realm",
+  "enabled": true,
+  "users": [
+    {
+      "username": "testuser",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "clientRoles": {
+        "payment-client": ["CLIENT"]
+      }
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "payment-client",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "test-client-secret",
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true
+    }
+  ],
+  "roles": {
+    "client": {
+      "payment-client": [
+        {
+          "name": "CLIENT",
+          "description": "Client role"
+        }
+      ]
+    }
+  }
+}

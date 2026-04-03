@@ -11,6 +11,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.ya.practicum.mymarket.controllers.dto.EntityConvertor;
+import ru.ya.practicum.mymarket.integration.config.Config;
 import ru.ya.practicum.mymarket.model.Item;
 import ru.ya.practicum.mymarket.model.SortMethod;
 import ru.ya.practicum.mymarket.repositories.ItemRepository;
@@ -44,7 +45,7 @@ public class ItemCacheTests extends AbstractTestWithRedis implements FillCart {
 
     @BeforeEach
     @Override
-    void setUp() {
+    protected void setUp() {
         mockItems = Arrays.asList(
                 new ItemWithCartCount(1L, "Item 1", "Description 1", "img", 100L, 1),
                 new ItemWithCartCount(2L, "Item 2", "Description 2", "img", 100L, 1),

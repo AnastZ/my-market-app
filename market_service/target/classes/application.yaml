@@ -41,9 +41,6 @@ spring:
             client-id: market-app
             client-secret: ваш-client-secret
             scope: openid, profile, email
-      resourceserver:
-        jwt:
-          issuer-uri: ${MARKET_AUTH_RESOURCE_URI:http://localhost:8080/realms/your-realm}
 
 server:
   port: ${MARKET_PORT:8084}

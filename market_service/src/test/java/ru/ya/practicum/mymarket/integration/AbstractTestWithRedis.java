@@ -43,7 +43,7 @@ public abstract class AbstractTestWithRedis extends AbstractTest {
     protected static final SortMethod SORT_METHOD = SortMethod.ALPHA;
 
     @BeforeEach
-    void setUp() {
+    protected void setUp() {
         clearAllCaches();
     }
 
