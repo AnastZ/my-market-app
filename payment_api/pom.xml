@@ -8,7 +8,6 @@
     </parent>
 
     <artifactId>payment_api</artifactId>
-    <version>${payment_api.version}</version>
     <packaging>jar</packaging>
 
     <name>payment_api</name>

@@ -5,7 +5,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.result.view.Rendering;
 import reactor.core.publisher.Mono;
@@ -15,7 +14,7 @@ import ru.ya.practicum.mymarket.services.ItemService;
 import java.util.Objects;
 
 @Controller
-@RequestMapping(path = { "/items"})
+@RequestMapping(path = {"/items"})
 public class ItemController {
 
     private ItemService itemService;
@@ -23,7 +22,6 @@ public class ItemController {
     public ItemController(@NotNull final ItemService itemService) {
         this.itemService = itemService;
     }
-
 
     /**
      * Получить объекты на заданной странице.
@@ -41,7 +39,7 @@ public class ItemController {
                                     @RequestParam(value = "sort", required = false, defaultValue = "NO") @NotNull final SortMethod sort,
                                     @RequestParam(value = "pageNumber", required = false, defaultValue = "1") final int pageNumber,
                                     @RequestParam(value = "pageSize", required = false, defaultValue = "5") final int pageSize) {
-        return itemService.getItems(pageNumber, pageSize, search, sort, Objects.isNull(user) ? "anonymous" : user.getUsername())
+        return itemService.getItems(pageNumber, pageSize, search, sort, getUsername(user))
                 .map(dto -> Rendering.view("items")
                         .modelAttribute("items", dto.items())
                         .modelAttribute("search", Objects.isNull(search) ? "" : search)
@@ -56,7 +54,7 @@ public class ItemController {
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public Mono<Rendering> changeItemInCart(@AuthenticationPrincipal final UserDetails user,
+    public Mono<Rendering> changeItemInCart(@AuthenticationPrincipal @NotNull final UserDetails user,
                                             @RequestParam("id") final Long id,
                                             @RequestParam(value = "search", required = false, defaultValue = "") final String search,
                                             @RequestParam(value = "sort", required = false, defaultValue = "NO") @NotNull final SortMethod sort,
@@ -103,6 +101,7 @@ public class ItemController {
                         .modelAttribute("item", it)
                         .build()));
     }
+
     private String getUsername(final UserDetails user) {
         return Objects.isNull(user) ? "anonymous" : user.getUsername();
     }

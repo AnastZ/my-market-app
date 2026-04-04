@@ -6,9 +6,9 @@ import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import ru.ya.practicum.mymarket.integration.config.SecurityConfig;
+import ru.ya.practicum.mymarket.integration.config.SecurityConfigSimple;
 
-@Import(SecurityConfig.class)
-@ActiveProfiles("test")
+@Import(SecurityConfigSimple.class)
 public class SecurityTest extends AbstractTestWithRedis{
 
     @Test
@@ -29,8 +29,7 @@ public class SecurityTest extends AbstractTestWithRedis{
         webTestClient.post()
                 .uri("/logout")
                 .exchange()
-                .expectStatus().is3xxRedirection()
-                .expectHeader().valueEquals("Location", "/login?logout")
+                .expectStatus().isForbidden()
                 .expectBody()
                 .consumeWith(result -> {
                 });

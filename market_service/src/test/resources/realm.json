@@ -1,42 +1,32 @@
 {
   "realm": "test-realm",
   "enabled": true,
+  "accessTokenLifespan": 300,
+  "roles": {
+    "realm": [
+      { "name": "CLIENT" }
+    ]
+  },
   "users": [
     {
       "username": "testuser",
       "enabled": true,
-      "credentials": [
-        {
-          "type": "password",
-          "value": "password",
-          "temporary": false
-        }
-      ],
-      "clientRoles": {
-        "payment-client": ["CLIENT"]
-      }
+      "credentials": [{ "type": "password", "value": "password" }],
+      "realmRoles": ["CLIENT"]
     }
   ],
   "clients": [
     {
       "clientId": "payment-client",
+      "secret": "secret",
       "enabled": true,
-      "publicClient": false,
-      "secret": "test-client-secret",
+      "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": true,
-      "authorizationServicesEnabled": true,
-      "standardFlowEnabled": false,
-      "directAccessGrantsEnabled": true
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "access.token.lifespan": "300"
+      }
     }
-  ],
-  "roles": {
-    "client": {
-      "payment-client": [
-        {
-          "name": "CLIENT",
-          "description": "Client role"
-        }
-      ]
-    }
-  }
+  ]
 }

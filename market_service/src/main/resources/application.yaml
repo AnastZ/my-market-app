@@ -6,7 +6,6 @@ spring:
     url: ${DB_URL:r2dbc:h2:mem:///market;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE}
     username: ${DB_USER:sa}
     password: ${DB_PASSWORD:password}
-    initialization-mode: always
 
   sql:
     init:
@@ -34,13 +33,15 @@ spring:
       client:
         provider:
           keycloak:
-            issuer-uri: ${MARKET_AUTH_CLIENT_URI:http://localhost:8080/realms/your-realm}
+            issuer-uri: ${MARKET_ISSUER_URI}
         registration:
-          keycloak:
+          market-service:
             provider: keycloak
-            client-id: market-app
-            client-secret: ваш-client-secret
-            scope: openid, profile, email
+            authorizationGrantType: client_credentials
+            client-id: market-service
+            client-secret: ${CLIENT_SECRET}
+            scope: profile
+            clientAuthenticationMethod: client_secret_post
 
 server:
   port: ${MARKET_PORT:8084}

@@ -16,7 +16,7 @@ package ru.ya.practicum.payment.client.auth;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.MultiValueMap;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T17:53:51.165741500+03:00[Europe/Moscow]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-04T14:09:03.842303800+03:00[Europe/Moscow]", comments = "Generator version: 7.21.0")
 public class HttpBearerAuth implements Authentication {
     private final String scheme;
     private String bearerToken;

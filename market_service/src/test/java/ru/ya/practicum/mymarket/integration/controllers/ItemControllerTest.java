@@ -20,9 +20,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Mono;
 import ru.ya.practicum.mymarket.integration.AbstractTestWithRedis;
-import ru.ya.practicum.mymarket.integration.FillCart;
-import ru.ya.practicum.mymarket.integration.config.SecurityConfig;
 import ru.ya.practicum.mymarket.controllers.ItemController;
+import ru.ya.practicum.mymarket.integration.config.SecurityConfig;
 import ru.ya.practicum.mymarket.model.CartItem;
 import ru.ya.practicum.mymarket.model.Item;
 import ru.ya.practicum.mymarket.model.SortMethod;
@@ -38,37 +37,24 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 @Import(SecurityConfig.class)
 @ActiveProfiles("test")
-public class ItemControllerTest extends AbstractTestWithRedis implements FillCart {
+public class ItemControllerTest extends AbstractTestWithRedis{
 
     static final String path = "/items";
 
     @Autowired
     private ItemRepository itemRepository;
     @Autowired
-    private CartRepository cartRepository;
-    @Autowired
     private CartItemRepository cartItemRepository;
     @Autowired
     private ItemService itemService;
-
     @MockitoBean
     private ReactiveJwtDecoder jwtDecoder;
 
     @Value("${item.list-size}")
     private int itemListSize;
-
-    @Override
-    protected void setUp() {
-        super.setUp();
-        FillCart.super.fillDb(username, cartRepository, itemRepository, cartItemRepository);
-    }
 
     @Test
     @WithAnonymousUser
@@ -109,7 +95,7 @@ public class ItemControllerTest extends AbstractTestWithRedis implements FillCar
     }
 
     @ParameterizedTest
-    @CsvSource(value = {"1, 5", "2, 10"})
+    @CsvSource(value = {"1, 10", "2, 5"})
     @WithAnonymousUser
     public void findAll_withoutSearchAndSort(final int pageNumber, final int pageSize) {
         final int countPages = (int) Math.ceil((double) getCountItems() / pageSize);
@@ -133,7 +119,7 @@ public class ItemControllerTest extends AbstractTestWithRedis implements FillCar
     }
 
     @ParameterizedTest
-    @CsvSource(value = {"1, 5, NO", "2, 10, ALPHA", "2, 5, PRICE"})
+    @CsvSource(value = {"1, 10, NO", "2, 5, ALPHA", "2, 5, PRICE"})
     @WithAnonymousUser
     public void findAll_withSort(final int pageNumber,
                                  final int pageSize,

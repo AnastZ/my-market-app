@@ -5,17 +5,33 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import ru.ya.practicum.mymarket.integration.AbstractTestWithRedis;
+import ru.ya.practicum.mymarket.integration.config.SecurityConfig;
+import ru.ya.practicum.mymarket.model.Order;
+import ru.ya.practicum.mymarket.repositories.OrderRepository;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+@Import(SecurityConfig.class)
+@ActiveProfiles("test")
 public class OrderControllerTest extends AbstractTestWithRedis {
 
     private final String path = "/orders";
 
+    @Autowired
+    private OrderRepository orderRepository;
+
     @Test
+    @WithMockUser(username)
     public void getAll_success() {
+
         webTestClient.get()
                 .uri(path)
                 .accept(MediaType.TEXT_HTML)

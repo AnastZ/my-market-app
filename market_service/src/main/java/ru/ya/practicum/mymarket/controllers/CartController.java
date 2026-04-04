@@ -16,7 +16,7 @@ import ru.ya.practicum.mymarket.services.ItemService;
 public class CartController {
 
     private final CartService cartService;
-    private final ItemService  itemService;
+    private final ItemService itemService;
 
     public CartController(@NotNull final CartService cartService,
                           @NotNull final ItemService itemService) {
@@ -26,18 +26,18 @@ public class CartController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public Mono<Rendering> getCart(@AuthenticationPrincipal final UserDetails user) {
+    public Mono<Rendering> getCart(@AuthenticationPrincipal @NotNull final UserDetails user) {
         return cartService.getCart(user.getUsername())
                 .map(cart -> Rendering.view("cart")
                         .modelAttribute("items", cart.items())
                         .modelAttribute("total", cart.total())
-                        .modelAttribute("successBuy",  cart.successBuy())
+                        .modelAttribute("successBuy", cart.successBuy())
                         .build());
     }
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public Mono<Rendering> changeItem(@AuthenticationPrincipal final UserDetails user,
+    public Mono<Rendering> changeItem(@AuthenticationPrincipal @NotNull final UserDetails user,
                                       @RequestParam("id") final Long itemId,
                                       @RequestParam(value = "action") final ItemController.CartItemAction action) {
 

@@ -4,7 +4,7 @@ API сервиса платежей
 
 - API version: 1.0.0
 
-- Build date: 2026-04-03T17:53:51.165741500+03:00[Europe/Moscow]
+- Build date: 2026-04-04T14:09:03.842303800+03:00[Europe/Moscow]
 
 - Generator version: 7.21.0
 

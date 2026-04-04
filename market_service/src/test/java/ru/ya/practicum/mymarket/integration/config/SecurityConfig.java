@@ -13,8 +13,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager;
-import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.*;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -34,13 +34,15 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Profile("test")
 public class SecurityConfig {
     @Bean
+    @Primary
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public ReactiveUserDetailsService userDetailsService(@NotNull final UserRepository userRepository,
-                                                         @NotNull final UserRoleRepository userRoleRepository) {
+    @Primary
+    public ReactiveUserDetailsService getUserDetailsService(@NotNull final UserRepository userRepository,
+                                                            @NotNull final UserRoleRepository userRoleRepository) {
         return username -> userRepository.findByUsername(username)
                 .switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found: " + username)))
                 .flatMap(user->userRoleRepository.findByUsername(username)
@@ -58,6 +60,25 @@ public class SecurityConfig {
     }
     @Bean
     @Primary
+    public ReactiveUserDetailsPasswordService reactiveUserDetailsPasswordService(
+            @NotNull final UserRepository userRepository,
+            @NotNull final PasswordEncoder passwordEncoder) {
+
+        return (user, password) -> {
+            return userRepository.findByUsername(user.getUsername())
+                    .flatMap(dbUser -> {
+                        dbUser.setPassword(passwordEncoder.encode(password));
+                        return userRepository.save(dbUser);
+                    })
+                    .map(updatedUser -> org.springframework.security.core.userdetails.User
+                            .withUsername(updatedUser.getUsername())
+                            .password(updatedUser.getPassword())
+                            .authorities(user.getAuthorities())
+                            .build());
+        };
+    }
+    @Bean
+    @Primary
     public SecurityWebFilterChain testSecurityFilterChain(ServerHttpSecurity http) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
@@ -71,31 +92,10 @@ public class SecurityConfig {
 
     @Bean
     @Primary
-    public MapReactiveUserDetailsService userDetailsService() {
-        UserDetails user = User.builder()
-                .username(AbstractTest.username)
-                .password("{noop}password")
-                .roles("CLIENT")
-                .build();
-        return new MapReactiveUserDetailsService(user);
-    }
-    @Bean
-    @Primary
     public ReactiveClientRegistrationRepository reactiveClientRegistrationRepository() {
         return Mockito.mock(ReactiveClientRegistrationRepository.class);
     }
 
-    @Bean
-    @Primary
-    public ReactiveOAuth2AuthorizedClientService reactiveOAuth2AuthorizedClientService() {
-        return Mockito.mock(ReactiveOAuth2AuthorizedClientService.class);
-    }
-
-    @Bean
-    @Primary
-    public ReactiveOAuth2AuthorizedClientManager getAuth2AuthorizedClientManager() {
-        return Mockito.mock(ReactiveOAuth2AuthorizedClientManager.class);
-    }
     @Bean
     public WebClient getPaymentServiceWebClient(final ReactiveOAuth2AuthorizedClientManager manager,
                                                 @Value("${payment-service.url}") final String paymentServiceUrl) {

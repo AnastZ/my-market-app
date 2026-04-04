@@ -1,4 +1,4 @@
-package ru.ya.practicum.mymarket.integration;
+package ru.ya.practicum.mymarket.integration.config;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;

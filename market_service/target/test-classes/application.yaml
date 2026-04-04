@@ -6,7 +6,6 @@ spring:
     url: ${DB_URL:r2dbc:h2:mem:///market;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE}
     username: ${DB_USER:sa}
     password: ${DB_PASSWORD:password}
-    initialization-mode: always
 
   sql:
     init:
@@ -31,16 +30,14 @@ spring:
         pool:
             max-active: 8
             max-idle: 8
-            min-idle: 0
+            min-idle: 2
         shutdown-timeout: 100ms
   security:
     oauth2:
       client:
-        enabled: false
-      resourceserver:
-        jwt:
-          enabled: false
-
+        registration:
+          market-service:
+            enabled: false
 
 server:
   port: ${MARKET_PORT:8084}

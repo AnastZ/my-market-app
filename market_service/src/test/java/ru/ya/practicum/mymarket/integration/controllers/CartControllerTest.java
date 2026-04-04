@@ -4,52 +4,31 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import ru.ya.practicum.mymarket.integration.AbstractTestWithRedis;
 import ru.ya.practicum.mymarket.integration.config.Config;
-import ru.ya.practicum.mymarket.integration.FillCart;
-import ru.ya.practicum.mymarket.repositories.CartItemRepository;
-import ru.ya.practicum.mymarket.repositories.CartRepository;
-import ru.ya.practicum.mymarket.repositories.ItemRepository;
+
+import ru.ya.practicum.mymarket.integration.config.SecurityConfig;
 
 import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.testcontainers.DockerClientFactory.SESSION_ID;
 
-@Import(Config.class)
-public class CartControllerTest extends AbstractTestWithRedis implements FillCart {
+@Import({Config.class, SecurityConfig.class})
+@ActiveProfiles("test")
+public class CartControllerTest extends AbstractTestWithRedis{
 
     private final String path = "/cart/items";
 
-    @Autowired
-    private CartRepository cartRepository;
-    @Autowired
-    private ItemRepository itemRepository;
-    @Autowired
-    private CartItemRepository cartItemRepository;
-
-
-    @BeforeEach
-    @Override
-    protected void setUp() {
-        super.setUp();
-        FillCart.super
-                .fillDb(username, cartRepository, itemRepository, cartItemRepository)
-                .collectList()
-                .block();
-    }
 
     @Test
+    @WithMockUser(username)
     public void getItems_success() {
-
-
         final String result = webTestClient.get()
                 .uri(path)
                 .exchange()
@@ -94,11 +73,11 @@ public class CartControllerTest extends AbstractTestWithRedis implements FillCar
     }
 
     @Test
-    void getCartBySessionId_success() {
+    @WithMockUser(username)
+    void getCartByUsername_success() {
 
         webTestClient.get()
                 .uri(path)
-                .cookie("SESSION", SESSION_ID)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()

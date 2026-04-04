@@ -12,6 +12,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.ya.practicum.mymarket.controllers.dto.EntityConvertor;
 import ru.ya.practicum.mymarket.integration.config.Config;
+import ru.ya.practicum.mymarket.integration.config.SecurityConfigSimple;
 import ru.ya.practicum.mymarket.model.Item;
 import ru.ya.practicum.mymarket.model.SortMethod;
 import ru.ya.practicum.mymarket.repositories.ItemRepository;
@@ -26,9 +27,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-
-@Import(Config.class)
-public class ItemCacheTests extends AbstractTestWithRedis implements FillCart {
+@Import({Config.class, SecurityConfigSimple.class})
+public class ItemCacheTests extends AbstractTestWithRedis {
     protected List<ItemWithCartCount> mockItems;
     private static final String CACHE_ITEMS_LIST = "itemsList";
     private static final String CACHE_ITEMS_CART = "itemsCart";

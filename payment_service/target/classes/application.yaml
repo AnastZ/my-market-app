@@ -1,16 +1,17 @@
 spring:
   application:
     name: payment_service
+
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${PAYMENT_AUTH_URI:http://localhost:8080/realms/your-realm}
+          issuer-uri: ${PAYMENT_AUTH_URI}
 springdoc:
   show-actuator: true
   paths-to-match: /, /api/**, /actuator/**
 server:
-  port: ${PAYMENT_PORT:8085}
+  port: ${PAYMENT_PORT}
 
 balance:
   min: 100

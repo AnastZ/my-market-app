@@ -33,7 +33,6 @@
         <springdoc.version>2.8.5</springdoc.version>
         <jsoup.version>1.22.1</jsoup.version>
         <testcontainers.version>1.21.4</testcontainers.version>
-        <payment_api.version>1.0</payment_api.version>
     </properties>
 
     <dependencyManagement>
@@ -44,7 +43,12 @@
                 <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
                 <version>${springdoc.version}</version>
             </dependency>
-
+            <!-- Module -->
+            <dependency>
+                <groupId>ru.ya.practicum</groupId>
+                <artifactId>payment_api</artifactId>
+                <version>1.0</version>
+            </dependency>
             <!-- Testcontainers -->
             <dependency>
                 <groupId>org.testcontainers</groupId>
@@ -56,6 +60,12 @@
                 <groupId>org.testcontainers</groupId>
                 <artifactId>junit-jupiter</artifactId>
                 <version>${testcontainers.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.github.dasniko</groupId>
+                <artifactId>testcontainers-keycloak</artifactId>
+                <version>4.1.1</version>
                 <scope>test</scope>
             </dependency>
             <!-- JSoup -->
@@ -92,12 +102,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-webtestclient -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-webtestclient</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-test</artifactId>

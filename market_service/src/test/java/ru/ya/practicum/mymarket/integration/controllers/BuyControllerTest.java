@@ -1,26 +1,32 @@
 package ru.ya.practicum.mymarket.integration.controllers;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Mono;
 import ru.ya.practicum.mymarket.controllers.dto.OrderDTO;
 import ru.ya.practicum.mymarket.integration.AbstractTestWithRedis;
+import ru.ya.practicum.mymarket.integration.config.SecurityConfig;
+import ru.ya.practicum.mymarket.integration.config.SecurityConfigSimple;
 import ru.ya.practicum.mymarket.services.OrderService;
 
 import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-
-
+@ActiveProfiles("test")
+@Import(SecurityConfig.class)
 public class BuyControllerTest extends AbstractTestWithRedis {
 
     @MockitoBean
     private OrderService orderService;
 
     @Test
+    @WithMockUser
     public void buy_success() throws Exception {
 
         final OrderDTO orderDTO = new OrderDTO(1L, Collections.emptyList(), 100L);

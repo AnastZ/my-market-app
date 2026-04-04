@@ -60,9 +60,8 @@ public class OrderService {
      * @param order заказ.
      * @return источник данных.
      */
-    private Mono<Order> fillOrder(final Order order) {
+    private Mono<Order> fillOrderItems(final Order order) {
         return orderItemRepository.findAllByOrderId(order.getId())
-                .switchIfEmpty(notFound())
                 .collectList()
                 .map(items -> {
                     order.setOrderItems(items);
@@ -76,11 +75,18 @@ public class OrderService {
      * @return источник данных с заказами.
      */
     @Transactional(readOnly = true)
-    public @NotNull Flux<OrderDTO> findAll() {
-        return orderRepository.findAll()
+    public @NotNull Flux<OrderDTO> findAll(@NotNull final String username) {
+        return orderRepository.findAllByUsername(username)
                 .switchIfEmpty(notFound())
-                .flatMap(this::fillOrder)
+                .flatMap(this::fillOrderItems)
                 .map(orderEntityConvertor::convert);
+    }
+
+    @Transactional(readOnly = true)
+    public Mono<Boolean> isOrderOwner(@NotNull final String username, @NotNull final Long orderId) {
+        return orderRepository.findById(orderId)
+                .map(order -> order.getUsername().equals(username))
+                .defaultIfEmpty(false);
     }
 
     /**
@@ -90,10 +96,11 @@ public class OrderService {
      * @return источник данных с найденным заказом, если заказ не найден генерируется ошибка NotFoundException.
      */
     @Transactional(readOnly = true)
-    public @NotNull Mono<OrderDTO> findById(@NotNull final Long id) {
-        return orderRepository.findById(id)
+    public @NotNull Mono<OrderDTO> findById(@NotNull final Long id,
+                                            @NotNull final String username) {
+        return orderRepository.findByIdAndUsername(id, username)
                 .switchIfEmpty(notFound(id))
-                .flatMap(this::fillOrder)
+                .flatMap(this::fillOrderItems)
                 .map(orderEntityConvertor::convert);
     }
 
@@ -114,7 +121,7 @@ public class OrderService {
                     return cartItemService.findItems(username)
                             .collectList()
                             .switchIfEmpty(notFound())
-                            .flatMap(items -> orderRepository.save(new Order())
+                            .flatMap(items -> orderRepository.save(new Order(username))
                                     .flatMap(order -> {
                                         final List<OrderItem> orderItems = items.stream()
                                                 .map(item -> new OrderItem(order.getId(), item))

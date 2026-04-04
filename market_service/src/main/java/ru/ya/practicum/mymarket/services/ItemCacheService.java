@@ -10,7 +10,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import ru.ya.practicum.mymarket.controllers.ItemController;
 import ru.ya.practicum.mymarket.model.SortMethod;
 import ru.ya.practicum.mymarket.repositories.ItemRepository;
 import ru.ya.practicum.mymarket.model.ItemWithCartCount;

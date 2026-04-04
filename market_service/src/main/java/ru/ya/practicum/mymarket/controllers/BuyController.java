@@ -9,7 +9,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.reactive.result.view.Rendering;
-import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 import ru.ya.practicum.mymarket.services.OrderService;
 
@@ -18,7 +17,6 @@ import ru.ya.practicum.mymarket.services.OrderService;
 public class BuyController {
 
     private final OrderService orderService;
-
 
     public BuyController(@NotNull final OrderService orderService) {
         this.orderService = orderService;
@@ -32,8 +30,7 @@ public class BuyController {
      */
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public Mono<Rendering> buy(@AuthenticationPrincipal final UserDetails user) {
-
+    public Mono<Rendering> buy(@AuthenticationPrincipal @NotNull final UserDetails user) {
         return orderService.createOrder(user.getUsername())
                 .map(order -> Rendering.redirectTo("orders/{id}")
                         .modelAttribute("id", order.id())

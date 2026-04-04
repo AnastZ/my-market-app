@@ -1,0 +1,13 @@
+D:\learning\Java Middle 2025\Sprint8\my-market-app\market_service\src\test\java\ru\ya\practicum\mymarket\integration\AbstractTest.java
+D:\learning\Java Middle 2025\Sprint8\my-market-app\market_service\src\test\java\ru\ya\practicum\mymarket\integration\AbstractTestWithRedis.java
+D:\learning\Java Middle 2025\Sprint8\my-market-app\market_service\src\test\java\ru\ya\practicum\mymarket\integration\config\Config.java
+D:\learning\Java Middle 2025\Sprint8\my-market-app\market_service\src\test\java\ru\ya\practicum\mymarket\integration\config\RequestLoggingFilter.java
+D:\learning\Java Middle 2025\Sprint8\my-market-app\market_service\src\test\java\ru\ya\practicum\mymarket\integration\config\SecurityConfig.java
+D:\learning\Java Middle 2025\Sprint8\my-market-app\market_service\src\test\java\ru\ya\practicum\mymarket\integration\config\SecurityConfigSimple.java
+D:\learning\Java Middle 2025\Sprint8\my-market-app\market_service\src\test\java\ru\ya\practicum\mymarket\integration\controllers\BuyControllerTest.java
+D:\learning\Java Middle 2025\Sprint8\my-market-app\market_service\src\test\java\ru\ya\practicum\mymarket\integration\controllers\CartControllerTest.java
+D:\learning\Java Middle 2025\Sprint8\my-market-app\market_service\src\test\java\ru\ya\practicum\mymarket\integration\controllers\ItemControllerTest.java
+D:\learning\Java Middle 2025\Sprint8\my-market-app\market_service\src\test\java\ru\ya\practicum\mymarket\integration\controllers\OrderControllerTest.java
+D:\learning\Java Middle 2025\Sprint8\my-market-app\market_service\src\test\java\ru\ya\practicum\mymarket\integration\ItemCacheTests.java
+D:\learning\Java Middle 2025\Sprint8\my-market-app\market_service\src\test\java\ru\ya\practicum\mymarket\integration\PaymentServiceTest.java
+D:\learning\Java Middle 2025\Sprint8\my-market-app\market_service\src\test\java\ru\ya\practicum\mymarket\integration\SecurityTest.java
