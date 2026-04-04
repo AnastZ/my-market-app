@@ -27,6 +27,14 @@
       "attributes": {
         "access.token.lifespan": "300"
       }
+    },
+    {
+      "clientId": "market-service",
+      "secret": "market-secret",
+      "enabled": true,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect"
     }
   ]
 }
