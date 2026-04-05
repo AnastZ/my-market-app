@@ -42,7 +42,7 @@ public class ControllerExceptionHandler {
     }
 
     @ExceptionHandler(AuthorizationDeniedException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     public Mono<Void> handleAuthorizationDenied(AuthorizationDeniedException ex) {
         return Mono.empty();
     }

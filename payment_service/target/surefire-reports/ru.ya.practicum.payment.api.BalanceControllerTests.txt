@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: ru.ya.practicum.payment.api.BalanceControllerTests
 -------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.317 s -- in ru.ya.practicum.payment.api.BalanceControllerTests
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.473 s -- in ru.ya.practicum.payment.api.BalanceControllerTests

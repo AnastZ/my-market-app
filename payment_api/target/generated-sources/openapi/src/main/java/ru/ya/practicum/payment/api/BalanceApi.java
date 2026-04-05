@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.Optional;
 import jakarta.annotation.Generated;
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-04-04T14:09:03.574367900+03:00[Europe/Moscow]", comments = "Generator version: 7.21.0")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-04-05T19:39:14.135613+03:00[Europe/Moscow]", comments = "Generator version: 7.21.0")
 @Validated
 @Tag(name = "balance", description = "the balance API")
 public interface BalanceApi {

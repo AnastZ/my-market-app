@@ -184,7 +184,7 @@ public class ItemControllerTest extends AbstractTestWithRedis{
                         .build(item.getId()))
                 .accept(MediaType.TEXT_HTML)
                 .exchange()
-                .expectStatus().isUnauthorized());
+                .expectStatus().isForbidden());
     }
     public Stream<DynamicTest> increment(final Consumer<Item> action) {
         return itemRepository.findAll()

@@ -96,49 +96,51 @@ CREATE INDEX IF NOT EXISTS IDX_ITEM_PRICE ON ITEM(PRICE);
 CREATE INDEX IF NOT EXISTS IDX_ORDER_TABLE_USERNAME ON ORDER_TABLE(USERNAME);
 
 -- ============================================
--- 5. Заполнение данными
+-- 5. Заполнение данными (с использованием MERGE)
 -- ============================================
 
--- Добавление пользователей
-INSERT INTO USERS (USERNAME, PASSWORD) VALUES
-                                           ('alice', '$2a$10$YourHashedPasswordHere1'),
-                                           ('bob', '$2a$10$YourHashedPasswordHere2'),
-                                           ('charlie', '$2a$10$YourHashedPasswordHere3');
+-- Добавление пользователей (только если их нет)
+MERGE INTO USERS (USERNAME, PASSWORD) KEY(USERNAME) VALUES
+    ('username', '$2a$10$YourHashedPasswordHere1'),
+    ('bob', '$2a$10$YourHashedPasswordHere2'),
+    ('charlie', '$2a$10$YourHashedPasswordHere3');
 
 -- Добавление ролей пользователей
-INSERT INTO USER_ROLES (USERNAME, USER_ROLE) VALUES
-                                                 ('alice', 'ROLE_USER'),
-                                                 ('alice', 'ROLE_ADMIN'),
-                                                 ('bob', 'ROLE_USER'),
-                                                 ('charlie', 'ROLE_USER');
+MERGE INTO USER_ROLES (USERNAME, USER_ROLE) KEY(USERNAME, USER_ROLE) VALUES
+    ('username', 'ROLE_USER'),
+    ('username', 'ROLE_ADMIN'),
+    ('bob', 'ROLE_USER'),
+    ('charlie', 'ROLE_USER');
 
--- Добавление товаров
-INSERT INTO ITEM (TITLE, DESCRIPTION, IMG_PATH, PRICE, VERSION) VALUES
-                                                                    ('Смартфон X100', 'Мощный смартфон с отличной камерой', '/images/phone.jpg', 29990, 0),
-                                                                    ('Ноутбук Pro 15', '15-дюймовый ноутбук для работы и игр', '/images/laptop.jpg', 69990, 0),
-                                                                    ('Беспроводные наушники', 'Качественный звук и шумоподавление', '/images/headphones.jpg', 4990, 0),
-                                                                    ('Клавиатура Mechanical', 'Механическая клавиатура с подсветкой', '/images/keyboard.jpg', 3990, 0),
-                                                                    ('Мышь Gaming', 'Игровая мышь с 6 кнопками', '/images/mouse.jpg', 1990, 0),
-                                                                    ('Монитор 27" 4K', '27-дюймовый 4K монитор', '/images/monitor.jpg', 24990, 0);
+-- Добавление товаров (только если их нет)
+MERGE INTO ITEM (TITLE, DESCRIPTION, IMG_PATH, PRICE, VERSION) KEY(TITLE) VALUES
+    ('Смартфон X100', 'Мощный смартфон с отличной камерой', '/images/phone.jpg', 29990, 0),
+    ('Ноутбук Pro 15', '15-дюймовый ноутбук для работы и игр', '/images/laptop.jpg', 69990, 0),
+    ('Беспроводные наушники', 'Качественный звук и шумоподавление', '/images/headphones.jpg', 4990, 0),
+    ('Клавиатура Mechanical', 'Механическая клавиатура с подсветкой', '/images/keyboard.jpg', 3990, 0),
+    ('Мышь Gaming', 'Игровая мышь с 6 кнопками', '/images/mouse.jpg', 1990, 0),
+    ('Монитор 27" 4K', '27-дюймовый 4K монитор', '/images/monitor.jpg', 24990, 0);
 
--- Добавление корзин для пользователей
-INSERT INTO CART (USERNAME, VERSION) VALUES
-                                         ('alice', 0),
-                                         ('bob', 0),
-                                         ('charlie', 0);
+-- Добавление корзин для пользователей (только если их нет)
+MERGE INTO CART (USERNAME, VERSION) KEY(USERNAME) VALUES
+    ('username', 0),
+    ('bob', 0),
+    ('charlie', 0);
 
--- Добавление товаров в корзину alice
+-- Добавление товаров в корзину username (удаляем старые и вставляем новые)
+DELETE FROM CART_ITEM WHERE CART_ID IN (SELECT ID FROM CART WHERE USERNAME = 'username');
 INSERT INTO CART_ITEM (CART_ID, ITEM_ID, TITLE, COUNT, ONE_ITEM_PRICE)
 SELECT c.ID, i.ID, i.TITLE, 2, i.PRICE
 FROM CART c, ITEM i
-WHERE c.USERNAME = 'alice' AND i.TITLE = 'Смартфон X100';
+WHERE c.USERNAME = 'username' AND i.TITLE = 'Смартфон X100';
 
 INSERT INTO CART_ITEM (CART_ID, ITEM_ID, TITLE, COUNT, ONE_ITEM_PRICE)
 SELECT c.ID, i.ID, i.TITLE, 1, i.PRICE
 FROM CART c, ITEM i
-WHERE c.USERNAME = 'alice' AND i.TITLE = 'Беспроводные наушники';
+WHERE c.USERNAME = 'username' AND i.TITLE = 'Беспроводные наушники';
 
--- Добавление товаров в корзину bob
+-- Добавление товаров в корзину bob (удаляем старые и вставляем новые)
+DELETE FROM CART_ITEM WHERE CART_ID IN (SELECT ID FROM CART WHERE USERNAME = 'bob');
 INSERT INTO CART_ITEM (CART_ID, ITEM_ID, TITLE, COUNT, ONE_ITEM_PRICE)
 SELECT c.ID, i.ID, i.TITLE, 1, i.PRICE
 FROM CART c, ITEM i
@@ -149,31 +151,35 @@ SELECT c.ID, i.ID, i.TITLE, 1, i.PRICE
 FROM CART c, ITEM i
 WHERE c.USERNAME = 'bob' AND i.TITLE = 'Мышь Gaming';
 
--- Добавление заказов
+-- Добавление заказов (удаляем старые и вставляем новые)
+DELETE FROM ORDER_TABLE WHERE USERNAME IN ('username', 'bob');
 INSERT INTO ORDER_TABLE (VERSION, USERNAME) VALUES
-                                                (0, 'alice'),
+                                                (0, 'username'),
                                                 (0, 'bob'),
-                                                (0, 'alice');
+                                                (0, 'username');
 
--- Добавление товаров в заказ 1 (alice)
+-- Добавление товаров в заказ 1 (username) - удаляем старые
+DELETE FROM ORDER_ITEM WHERE ORDER_ID = 1;
 INSERT INTO ORDER_ITEM (ORDER_ID, ITEM_ID, TITLE, COUNT, PRICE_AT_ORDER)
 SELECT o.ID, i.ID, i.TITLE, 1, i.PRICE
 FROM ORDER_TABLE o, ITEM i
-WHERE o.USERNAME = 'alice' AND o.ID = 1 AND i.TITLE = 'Смартфон X100';
+WHERE o.USERNAME = 'username' AND o.ID = 1 AND i.TITLE = 'Смартфон X100';
 
 INSERT INTO ORDER_ITEM (ORDER_ID, ITEM_ID, TITLE, COUNT, PRICE_AT_ORDER)
 SELECT o.ID, i.ID, i.TITLE, 2, i.PRICE
 FROM ORDER_TABLE o, ITEM i
-WHERE o.USERNAME = 'alice' AND o.ID = 1 AND i.TITLE = 'Беспроводные наушники';
+WHERE o.USERNAME = 'username' AND o.ID = 1 AND i.TITLE = 'Беспроводные наушники';
 
--- Добавление товаров в заказ 2 (bob)
+-- Добавление товаров в заказ 2 (bob) - удаляем старые
+DELETE FROM ORDER_ITEM WHERE ORDER_ID = 2;
 INSERT INTO ORDER_ITEM (ORDER_ID, ITEM_ID, TITLE, COUNT, PRICE_AT_ORDER)
 SELECT o.ID, i.ID, i.TITLE, 1, i.PRICE
 FROM ORDER_TABLE o, ITEM i
 WHERE o.USERNAME = 'bob' AND o.ID = 2 AND i.TITLE = 'Ноутбук Pro 15';
 
--- Добавление товаров в заказ 3 (alice)
+-- Добавление товаров в заказ 3 (username) - удаляем старые
+DELETE FROM ORDER_ITEM WHERE ORDER_ID = 3;
 INSERT INTO ORDER_ITEM (ORDER_ID, ITEM_ID, TITLE, COUNT, PRICE_AT_ORDER)
 SELECT o.ID, i.ID, i.TITLE, 1, i.PRICE
 FROM ORDER_TABLE o, ITEM i
-WHERE o.USERNAME = 'alice' AND o.ID = 3 AND i.TITLE = 'Клавиатура Mechanical';
+WHERE o.USERNAME = 'username' AND o.ID = 3 AND i.TITLE = 'Клавиатура Mechanical';

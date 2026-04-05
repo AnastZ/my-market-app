@@ -33,13 +33,13 @@ spring:
       client:
         provider:
           keycloak:
-            issuer-uri: ${MARKET_ISSUER_URI:http://localhost:8087/realms/master}
+            issuer-uri: ${MARKET_ISSUER_URI}
         registration:
           market-service:
             provider: keycloak
             authorizationGrantType: client_credentials
             client-id: market-service
-            client-secret: ${CLIENT_SECRET:LlCx1o86PWqs6o5Jh1PCDTqkwxMCjf6R}
+            client-secret: ${CLIENT_SECRET}
             scope: profile
             clientAuthenticationMethod: client_secret_post
 
