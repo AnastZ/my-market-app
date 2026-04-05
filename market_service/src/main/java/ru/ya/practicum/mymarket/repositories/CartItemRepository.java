@@ -16,16 +16,16 @@ public interface CartItemRepository extends ReactiveCrudRepository<CartItem, Lon
     @Query("""
             SELECT * FROM Cart_Item ct 
             LEFT JOIN cart c ON c.id = ct.cart_id
-            WHERE ct.item_id = :item AND c.session_Id = :session
+            WHERE ct.item_id = :item AND c.username = :username
             """)
-    Mono<CartItem> findByItemIdAndSessionId(@Param("item") Long itemId,
-                                            @Param("session") String sessionId);
+    Mono<CartItem> findByItemIdAndUsername(@Param("item") Long itemId,
+                                           @Param("username") String username);
 
     @Query("""
             SELECT * FROM Cart_Item ct 
             LEFT JOIN cart c ON c.id = ct.cart_id
-            WHERE c.session_Id = :session
+            WHERE c.username = :username
             """)
-    Flux<CartItem> getCartItems(@NotNull @NotBlank @Param("session") final String sessionId);
+    Flux<CartItem> getCartItems(@NotNull @NotBlank @Param("username") final String username);
 
 }

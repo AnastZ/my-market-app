@@ -16,12 +16,16 @@ public class Order {
     @Id
     private Long id;
 
+    @NotNull
+    private String username;
+
     @Transient
     private List<OrderItem> orderItems;
     @Version
     private Long version;
 
-    public Order() {
+    public Order(@NotNull final String username) {
+        this.username = username;
         orderItems = new ArrayList<>();
     }
 
@@ -33,6 +37,13 @@ public class Order {
         this.id = id;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     public List<OrderItem> getOrderItems() {
         return orderItems;

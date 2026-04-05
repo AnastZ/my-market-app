@@ -11,6 +11,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.ya.practicum.mymarket.controllers.dto.EntityConvertor;
+import ru.ya.practicum.mymarket.integration.config.Config;
+import ru.ya.practicum.mymarket.integration.config.SecurityConfigSimple;
 import ru.ya.practicum.mymarket.model.Item;
 import ru.ya.practicum.mymarket.model.SortMethod;
 import ru.ya.practicum.mymarket.repositories.ItemRepository;
@@ -25,9 +27,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-
-@Import(Config.class)
-public class ItemCacheTests extends AbstractTestWithRedis implements FillCart {
+@Import({Config.class, SecurityConfigSimple.class})
+public class ItemCacheTests extends AbstractTestWithRedis {
     protected List<ItemWithCartCount> mockItems;
     private static final String CACHE_ITEMS_LIST = "itemsList";
     private static final String CACHE_ITEMS_CART = "itemsCart";
@@ -44,7 +45,7 @@ public class ItemCacheTests extends AbstractTestWithRedis implements FillCart {
 
     @BeforeEach
     @Override
-    void setUp() {
+    protected void setUp() {
         mockItems = Arrays.asList(
                 new ItemWithCartCount(1L, "Item 1", "Description 1", "img", 100L, 1),
                 new ItemWithCartCount(2L, "Item 2", "Description 2", "img", 100L, 1),
@@ -61,7 +62,7 @@ public class ItemCacheTests extends AbstractTestWithRedis implements FillCart {
     private ItemCacheService itemCacheService;
     @Test
     void getAllCached_firstQueryFromDB_afterFromCache_success() {
-        final List<ItemWithCartCount> result = itemCacheService.getAllCached(SEARCH, SORT_METHOD, sessionId)
+        final List<ItemWithCartCount> result = itemCacheService.getAllCached(SEARCH, SORT_METHOD, username)
                 .collectList()
                 .block();
 
@@ -70,11 +71,11 @@ public class ItemCacheTests extends AbstractTestWithRedis implements FillCart {
         assertThat(result).isEqualTo(mockItems);
 
         verify(itemRepository, times(1))
-                .findAllWithCart(eq(SEARCH), eq(sessionId), any(Sort.class));
+                .findAllWithCart(eq(SEARCH), eq(username), any(Sort.class));
 
         final Cache cache = cacheManager.getCache(CACHE_ITEMS_LIST);
         assertThat(cache).isNotNull();
-        String cacheKey = ItemCacheService.getCacheKey(SEARCH, SORT_METHOD.name(), sessionId);
+        String cacheKey = ItemCacheService.getCacheKey(SEARCH, SORT_METHOD.name(), username);
 
         @SuppressWarnings("unchecked")
         final List<ItemWithCartCount> cachedItems = cache.get(cacheKey, List.class);
@@ -85,12 +86,12 @@ public class ItemCacheTests extends AbstractTestWithRedis implements FillCart {
 
     @Test
     void getAllCached_fromCache_success() {
-        final String cacheKey = SEARCH + ":" + SORT_METHOD.name() + ":" + sessionId;
+        final String cacheKey = ItemCacheService.getCacheKey(SEARCH, SORT_METHOD.name(), username);
         org.springframework.cache.Cache cache = cacheManager.getCache(CACHE_ITEMS_LIST);
         assertThat(cache).isNotNull();
         cache.put(cacheKey, mockItems);
 
-        final List<ItemWithCartCount> result = itemCacheService.getAllCached(SEARCH, SORT_METHOD, sessionId)
+        final List<ItemWithCartCount> result = itemCacheService.getAllCached(SEARCH, SORT_METHOD, username)
                 .collectList()
                 .block();
 

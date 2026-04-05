@@ -9,5 +9,5 @@ import ru.ya.practicum.mymarket.model.Cart;
 @Repository
 public interface CartRepository extends ReactiveCrudRepository<Cart, Long> {
 
-    Mono<Cart> findBySessionId(@NotNull String sessionId);
+    Mono<Cart> findByUsername(@NotNull String username);
 }

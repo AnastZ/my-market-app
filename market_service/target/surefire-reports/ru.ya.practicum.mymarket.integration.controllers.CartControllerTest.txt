@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: ru.ya.practicum.mymarket.integration.controllers.CartControllerTest
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.066 s -- in ru.ya.practicum.mymarket.integration.controllers.CartControllerTest

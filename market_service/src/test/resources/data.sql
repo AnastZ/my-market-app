@@ -1,62 +1,99 @@
--- Очистка таблиц (если нужно перезаполнить)
-SET REFERENTIAL_INTEGRITY FALSE;
-TRUNCATE TABLE ORDER_ITEM;
-TRUNCATE TABLE ORDER_TABLE;
-TRUNCATE TABLE CART_ITEM;
-TRUNCATE TABLE CART;
-TRUNCATE TABLE ITEM;
-SET REFERENTIAL_INTEGRITY TRUE;
 
--- Сброс последовательностей (для H2)
-ALTER TABLE ITEM ALTER COLUMN ID RESTART WITH 1;
-ALTER TABLE CART ALTER COLUMN ID RESTART WITH 1;
-ALTER TABLE CART_ITEM ALTER COLUMN ID RESTART WITH 1;
-ALTER TABLE ORDER_TABLE ALTER COLUMN ID RESTART WITH 1;
-ALTER TABLE ORDER_ITEM ALTER COLUMN ID RESTART WITH 1;
+DELETE FROM ORDER_ITEM;
+DELETE FROM ORDER_TABLE;
+DELETE FROM CART_ITEM;
+DELETE FROM CART;
+DELETE FROM USER_ROLES;
+DELETE FROM USERS;
+DELETE FROM ITEM;
+-- 1. Добавление пользователей
+INSERT INTO USERS (USERNAME, PASSWORD) VALUES
+                                           ('username', '$2a$10$YourHashedPasswordHere1'),
+                                           ('bob', '$2a$10$YourHashedPasswordHere2'),     -- пароль: bob123
+                                           ('charlie', '$2a$10$YourHashedPasswordHere3'); -- пароль: charlie123
 
--- Добавление тестовых товаров
+-- 2. Добавление ролей пользователей
+INSERT INTO USER_ROLES (USERNAME, USER_ROLE) VALUES
+                                                 ('username', 'ROLE_USER'),
+                                                 ('username', 'ROLE_ADMIN'),
+                                                 ('bob', 'ROLE_USER'),
+                                                 ('charlie', 'ROLE_USER');
+
+-- 3. Добавление товаров
 INSERT INTO ITEM (TITLE, DESCRIPTION, IMG_PATH, PRICE, VERSION) VALUES
-                                                                    ('Смартфон X100', 'Современный смартфон с отличной камерой и большим экраном', '/images/smartphone.jpg', 50000, 0),
-                                                                    ('Ноутбук Pro', 'Мощный ноутбук для работы и игр', '/images/laptop.jpg', 120000, 0),
-                                                                    ('Наушники Wireless', 'Беспроводные наушники с шумоподавлением', '/images/headphones.jpg', 15000, 0),
-                                                                    ('Планшет Tab 10', 'Легкий и компактный планшет для повседневных задач', '/images/tablet.jpg', 40000, 0),
-                                                                    ('Умные часы Watch 5', 'Стильные умные часы с мониторингом здоровья', '/images/watch.jpg', 25000, 0),
-                                                                    ('Фитнес-браслет Fit', 'Трекер активности и сна', '/images/fitness.jpg', 5000, 0),
-                                                                    ('Внешний аккумулятор Power 20000', 'Емкий повербанк для зарядки устройств', '/images/powerbank.jpg', 3000, 0),
-                                                                    ('Карта памяти 128GB', 'Быстрая карта памяти для фото и видео', '/images/sdcard.jpg', 2000, 0),
-                                                                    ('Мышь беспроводная', 'Эргономичная мышь для комфортной работы', '/images/mouse.jpg', 2500, 0),
-                                                                    ('Клавиатура механическая', 'Игровая механическая клавиатура с подсветкой', '/images/keyboard.jpg', 7000, 0),
-                                                                    ('Монитор 27" 4K', 'Профессиональный монитор с высоким разрешением', '/images/monitor.jpg', 60000, 0),
-                                                                    ('Принтер лазерный', 'Многофункциональное устройство для печати', '/images/printer.jpg', 35000, 0);
+                                                                    ('Смартфон X100', 'Мощный смартфон с отличной камерой', '/images/phone.jpg', 29990, 0),
+                                                                    ('Ноутбук Pro 15', '15-дюймовый ноутбук для работы и игр', '/images/laptop.jpg', 69990, 0),
+                                                                    ('Беспроводные наушники', 'Качественный звук и шумоподавление', '/images/headphones.jpg', 4990, 0),
+                                                                    ('Клавиатура Mechanical', 'Механическая клавиатура с подсветкой', '/images/keyboard.jpg', 3990, 0),
+                                                                    ('Мышь Gaming', 'Игровая мышь с 6 кнопками', '/images/mouse.jpg', 1990, 0),
+                                                                    ('Монитор 27" 4K', '27-дюймовый 4K монитор', '/images/monitor.jpg', 24990, 0);
 
--- Создание тестовых корзин
-INSERT INTO CART (SESSION_ID, VERSION) VALUES
-                                           ('test-session-123', 0),
-                                           ('test-session-456', 0),
-                                           ('empty-cart-session', 0),
-                                           ('full-cart-session', 0);
+-- 4. Добавление корзин для пользователей (связь с USERS через USERNAME)
+INSERT INTO CART (USERNAME, VERSION) VALUES
+                                         ('username', 0),
+                                         ('bob', 0),
+                                         ('charlie', 0);
 
--- Добавление товаров в корзину
-INSERT INTO CART_ITEM (CART_ID, ITEM_ID, TITLE, COUNT, ONE_ITEM_PRICE, VERSION) VALUES
-                                                                                    (1, 1, 'Смартфон X100', 2, 50000, 0),
-                                                                                    (1, 2, 'Ноутбук Pro', 1, 120000, 0),
-                                                                                    (1, 3, 'Наушники Wireless', 3, 15000, 0),
-                                                                                    (2, 4, 'Планшет Tab 10', 1, 40000, 0),
-                                                                                    (2, 5, 'Умные часы Watch 5', 2, 25000, 0);
+-- 5. Добавление товаров в корзины
+INSERT INTO CART_ITEM (CART_ID, ITEM_ID, TITLE, COUNT, ONE_ITEM_PRICE)
+SELECT c.ID, i.ID, i.TITLE, 2, i.PRICE
+FROM CART c, ITEM i
+WHERE c.USERNAME = 'username' AND i.TITLE = 'Смартфон X100';
 
--- Добавление множества товаров в корзину для тестирования пагинации
-INSERT INTO CART_ITEM (CART_ID, ITEM_ID, TITLE, COUNT, ONE_ITEM_PRICE, VERSION)
-SELECT 4, ID, TITLE, 1, PRICE, 0 FROM ITEM WHERE ID <= 10;
+INSERT INTO CART_ITEM (CART_ID, ITEM_ID, TITLE, COUNT, ONE_ITEM_PRICE)
+SELECT c.ID, i.ID, i.TITLE, 1, i.PRICE
+FROM CART c, ITEM i
+WHERE c.USERNAME = 'username' AND i.TITLE = 'Беспроводные наушники';
 
--- Создание тестовых заказов
-INSERT INTO ORDER_TABLE (VERSION) VALUES
-                                      (0),
-                                      (0);
+-- Корзина bob
+INSERT INTO CART_ITEM (CART_ID, ITEM_ID, TITLE, COUNT, ONE_ITEM_PRICE)
+SELECT c.ID, i.ID, i.TITLE, 1, i.PRICE
+FROM CART c, ITEM i
+WHERE c.USERNAME = 'bob' AND i.TITLE = 'Ноутбук Pro 15';
 
--- Добавление товаров в заказы (с добавленным полем TITLE)
-INSERT INTO ORDER_ITEM (ORDER_ID, ITEM_ID, TITLE, COUNT, PRICE_AT_ORDER, VERSION) VALUES
-                                                                                      (1, 1, 'Смартфон X100', 1, 50000, 0),
-                                                                                      (1, 2, 'Ноутбук Pro', 1, 120000, 0),
-                                                                                      (1, 3, 'Наушники Wireless', 2, 15000, 0),
-                                                                                      (2, 4, 'Планшет Tab 10', 1, 40000, 0),
-                                                                                      (2, 5, 'Умные часы Watch 5', 1, 25000, 0);
+INSERT INTO CART_ITEM (CART_ID, ITEM_ID, TITLE, COUNT, ONE_ITEM_PRICE)
+SELECT c.ID, i.ID, i.TITLE, 1, i.PRICE
+FROM CART c, ITEM i
+WHERE c.USERNAME = 'bob' AND i.TITLE = 'Мышь Gaming';
+
+-- ============================================
+-- 6. Добавление заказов
+-- ============================================
+INSERT INTO ORDER_TABLE (VERSION, USERNAME) VALUES
+                                                (0, 'username'),
+                                                (0, 'bob'),
+                                                (0, 'username');
+
+-- ============================================
+-- 7. Добавление товаров в заказы (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+-- ============================================
+
+-- Заказ для username (первый заказ - самый старый)
+INSERT INTO ORDER_ITEM (ORDER_ID, ITEM_ID, TITLE, COUNT, PRICE_AT_ORDER)
+SELECT o.ID, i.ID, i.TITLE, 1, i.PRICE
+FROM ORDER_TABLE o, ITEM i
+WHERE o.USERNAME = 'username'
+  AND o.CREATED_AT = (SELECT MIN(CREATED_AT) FROM ORDER_TABLE WHERE USERNAME = 'username')
+  AND i.TITLE = 'Смартфон X100';
+
+INSERT INTO ORDER_ITEM (ORDER_ID, ITEM_ID, TITLE, COUNT, PRICE_AT_ORDER)
+SELECT o.ID, i.ID, i.TITLE, 2, i.PRICE
+FROM ORDER_TABLE o, ITEM i
+WHERE o.USERNAME = 'username'
+  AND o.CREATED_AT = (SELECT MIN(CREATED_AT) FROM ORDER_TABLE WHERE USERNAME = 'username')
+  AND i.TITLE = 'Беспроводные наушники';
+
+-- Заказ для bob
+INSERT INTO ORDER_ITEM (ORDER_ID, ITEM_ID, TITLE, COUNT, PRICE_AT_ORDER)
+SELECT o.ID, i.ID, i.TITLE, 1, i.PRICE
+FROM ORDER_TABLE o, ITEM i
+WHERE o.USERNAME = 'bob'
+  AND i.TITLE = 'Ноутбук Pro 15';
+
+-- Заказ для username (второй заказ - самый новый)
+INSERT INTO ORDER_ITEM (ORDER_ID, ITEM_ID, TITLE, COUNT, PRICE_AT_ORDER)
+SELECT o.ID, i.ID, i.TITLE, 1, i.PRICE
+FROM ORDER_TABLE o, ITEM i
+WHERE o.USERNAME = 'username'
+  AND o.CREATED_AT = (SELECT MAX(CREATED_AT) FROM ORDER_TABLE WHERE USERNAME = 'username')
+  AND i.TITLE = 'Клавиатура Mechanical';

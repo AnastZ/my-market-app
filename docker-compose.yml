@@ -17,6 +17,29 @@ services:
       - market-network
     restart: unless-stopped
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0.1
+    container_name: market-keycloak
+    ports:
+      - "8089:8089"
+    environment:
+      KC_HTTP_PORT: 8089
+      KC_HOSTNAME: keycloak
+      KC_HOSTNAME_PORT: 8089
+      KC_HOSTNAME_STRICT: "false"
+    volumes:
+      - ./realm.json:/opt/keycloak/data/import/realm.json:ro
+    command: start-dev --import-realm
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8089/realms/test-realm" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - market-network
+    restart: unless-stopped
+
   payment_service:
     build:
       context: .
@@ -28,8 +51,8 @@ services:
       - PAYMENT_PORT=${PAYMENT_PORT:-8085}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-    env_file:
-      - .env
+      - PAYMENT_AUTH_URI=http://keycloak:8089/realms/test-realm
+
     depends_on:
       redis:
         condition: service_healthy
@@ -59,8 +82,8 @@ services:
       - CACHE_DB_PORT=6379
       - PAYMENT_URL=http://payment_service:${PAYMENT_PORT:-8085}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-    env_file:
-      - .env
+      - MARKET_ISSUER_URI=http://keycloak:8089/realms/test-realm
+
     depends_on:
       payment_service:
         condition: service_healthy

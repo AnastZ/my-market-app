@@ -24,13 +24,13 @@ public class CartItemService {
 
     @Transactional(readOnly = true)
     public Mono<CartItem> findByIdInCart(@NotNull final Long itemId,
-                                         @NotNull @NotBlank final String sessionId) {
-        return cartItemRepository.findByItemIdAndSessionId(itemId, sessionId);
+                                         @NotNull @NotBlank final String username) {
+        return cartItemRepository.findByItemIdAndUsername(itemId, username);
     }
 
     @Transactional(readOnly = true)
-    public Flux<CartItem> findItemsBySessionId(@NotNull @NotBlank final String sessionId) {
-        return cartItemRepository.getCartItems(sessionId);
+    public Flux<CartItem> findItems(@NotNull @NotBlank final String username) {
+        return cartItemRepository.getCartItems(username);
     }
 
     @Transactional

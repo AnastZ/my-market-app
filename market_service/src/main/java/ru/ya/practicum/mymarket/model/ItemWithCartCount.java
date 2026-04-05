@@ -23,7 +23,6 @@ public class ItemWithCartCount implements Serializable {
     protected ItemWithCartCount() {
 
     }
-
     public ItemWithCartCount(Long id,
                              String title,
                              String description,

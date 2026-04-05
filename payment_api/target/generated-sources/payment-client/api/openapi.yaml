@@ -1,0 +1,91 @@
+openapi: 3.0.3
+info:
+  title: API сервиса платежей
+  version: 1.0.0
+servers:
+- url: /
+paths:
+  /balance/{username}:
+    get:
+      operationId: getBalance
+      parameters:
+      - description: Уникальное имя пользователя
+        explode: false
+        in: path
+        name: username
+        required: true
+        schema:
+          $ref: "#/components/schemas/Username"
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentValue"
+          description: Сумма баланса
+      summary: Получить баланс
+      tags:
+      - balance
+      x-accepts:
+      - application/json
+  /payment/{username}:
+    post:
+      operationId: payment
+      parameters:
+      - description: Уникальное имя пользователя
+        explode: false
+        in: path
+        name: username
+        required: true
+        schema:
+          $ref: "#/components/schemas/Username"
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentValue"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentValue"
+          description: Сумма баланса
+      summary: Вычесть из баланса
+      tags:
+      - balance
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+components:
+  parameters:
+    Username:
+      description: Уникальное имя пользователя
+      explode: false
+      in: path
+      name: username
+      required: true
+      schema:
+        $ref: "#/components/schemas/Username"
+      style: simple
+  responses:
+    SuccessBalance:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/PaymentValue"
+      description: Сумма баланса
+  schemas:
+    PaymentValue:
+      description: Денежное значение
+      format: int64
+      nullable: false
+      type: integer
+    Username:
+      description: Уникальное имя пользователя
+      nullable: false
+      type: string
+

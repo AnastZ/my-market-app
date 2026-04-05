@@ -41,18 +41,6 @@ public class CartItem {
         this.oneItemPrice = oneItemPrice;
     }
 
-    public CartItem(@NotNull final Long cartId,
-                    @NotNull final Long itemId,
-                    @NotNull final String title,
-                    @NotNull @Min(1) final Long count,
-                    @NotNull final Long oneItemPrice) {
-        this.cartId = cartId;
-        this.itemId = itemId;
-        this.title = title;
-        this.count = count;
-        this.oneItemPrice = oneItemPrice;
-    }
-
     public void incrementCount() {
         this.count++;
     }

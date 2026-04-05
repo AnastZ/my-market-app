@@ -8,8 +8,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import ru.ya.practicum.mymarket.utils.FileUtils;
@@ -21,7 +19,6 @@ import java.nio.file.NoSuchFileException;
 public class ImageService {
 
     private final FileUtils fileUtils;
-    // Путь к директории, где хранятся все изображения.
     private final String UPLOAD_DIR;
     private final ResourceLoader resourceLoader;
 

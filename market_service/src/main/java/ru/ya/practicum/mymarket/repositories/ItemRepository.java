@@ -21,14 +21,14 @@ public interface ItemRepository extends ReactiveCrudRepository<Item, Long> {
                     SELECT ci.count
                     FROM cart_item ci
                     JOIN cart c ON ci.cart_id = c.id
-                    WHERE ci.item_id = i.id AND c.session_id = :sessionId
+                    WHERE ci.item_id = i.id AND c.username = :username
                     LIMIT 1), 0) as count
                 FROM item i
                 WHERE (LOWER(i.title) LIKE LOWER(CONCAT('%', :search, '%'))
                 OR LOWER(i.description) LIKE LOWER(CONCAT('%', :search, '%')))
             """)
     Flux<ItemWithCartCount> findAllWithCart(@NotNull String search,
-                                            @NotNull @NotBlank String sessionId,
+                                            @NotNull @NotBlank String username,
                                             @NotNull Sort sort);
 
     @Query("""
@@ -37,13 +37,13 @@ public interface ItemRepository extends ReactiveCrudRepository<Item, Long> {
                     SELECT ci.count
                     FROM cart_item ci
                     JOIN cart c ON ci.cart_id = c.id
-                    WHERE ci.item_id = i.id AND c.session_id = :sessionId
+                    WHERE ci.item_id = i.id AND c.username = :username
                     LIMIT 1), 0) as count
             FROM item i
             LEFT JOIN cart_item ci ON ci.item_id = i.id 
-            LEFT JOIN cart c ON ci.cart_id = c.id AND c.session_id = :sessionId
+            LEFT JOIN cart c ON ci.cart_id = c.id AND c.username = :username
             """)
-    Flux<ItemWithCartCount> findAllInCart(@NotNull @NotBlank @Param("sessionId") String sessionId);
+    Flux<ItemWithCartCount> findAllInCart(@NotNull @NotBlank @Param("username") String username);
 
 
     @Query("""
@@ -52,14 +52,13 @@ public interface ItemRepository extends ReactiveCrudRepository<Item, Long> {
                                               SELECT ci.count
                                               FROM cart_item ci
                                               JOIN cart c ON ci.cart_id = c.id
-                                              WHERE ci.item_id = i.id AND c.session_id = :session
+                                              WHERE ci.item_id = i.id AND c.username = :username
                                               LIMIT 1), 0) as count
                                       FROM item i
                                       WHERE i.id = :item
             """)
     Mono<ItemWithCartCount> findByIdAndSessionId(@NotNull @Param("item") Long itemId,
-                                                 @NotNull @NotBlank @Param("session") String sessionId);
-
+                                                 @NotNull @NotBlank @Param("username") String username);
 
     Mono<Item> findById(@NotNull Long id);
 }
